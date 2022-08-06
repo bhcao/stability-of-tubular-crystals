@@ -1,7 +1,7 @@
-TARGET = $(shell ls | grep .c$ | grep -v main.c)
+TARGET = $(shell ls | grep .cpp$ | grep -v main.cpp)
 
 debug:
-	g++ main.c $(TARGET) -g2 -o main.out
+	g++ main.cpp $(TARGET) -g2 -o main.out
 	./main.out
 
 release:

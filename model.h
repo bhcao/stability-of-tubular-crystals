@@ -62,7 +62,7 @@ public:
     double total_energy();
 
     // 虚函数的实现
-    double energy(node center);
+    double energy(node center) override;
     
 private:
     // 生成所有原子与之相邻的点
