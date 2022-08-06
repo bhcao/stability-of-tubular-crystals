@@ -1,6 +1,6 @@
 #include <fstream>
 
-#include "node.h"
+#include "molecule.h"
 #include "model.h"
 #include "figure.h"
 

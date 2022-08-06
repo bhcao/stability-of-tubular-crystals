@@ -1,5 +1,6 @@
 #include <cstdlib>
 #include <fstream>
+#include <cstdio>
 
 #include "figure.h"
 
@@ -18,10 +19,5 @@ void figure::draw(const char* name){
          << name << ")";
     fout.close();
     std::system("python __nano__temp__.py");
-#ifdef _WIN32
-    std::system("del __nano__temp__.py");
-#endif
-#ifdef __linux__
-    std::system("rm __nano__temp__.py");
-#endif
+    std::remove("__nano__temp__.py");
 }

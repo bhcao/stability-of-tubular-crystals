@@ -1,12 +1,21 @@
 #include <cmath>
 #include <vector>
-#include <cstdlib>
-#include <ctime>
 
-#include "node.h"
+#include "molecule.h"
 #include "model.h"
 
-using std::vector, std::acos, std::tan, std::rand;
+using std::vector, std::acos, std::tan;
+
+// 虚函数的实现，生成一个点周围的能量，便于更新
+double model::energy(node center) {
+    vector<node> others = this->adjacents[center.id].others;
+    double count = 0;
+    for (int i=0; i<others.size(); i++) {
+        count += bond_energy(center, others[i]);
+    }
+    count += curve_energy(center, others);
+    return count;
+}
 
 double model::bond_energy(node p1, node p2) {
     return this->ppara.k/2 * (dist(p1, p2) - this->ppara.rest_len)*
@@ -32,6 +41,7 @@ vector<double> angle_around(node center, vector<node> others) {
 }
 
 double model::curve_energy(node center, vector<node> others) {
+    
     vector<double> angle = angle_around(center, others);
     // 计算周围区域面积
     double size = 0;
@@ -70,52 +80,4 @@ double model::total_energy() {
             this->nodes[this->bonds[i].b]);
     }
     return count;
-}
-
-// 生成一个点周围的能量，便于更新
-double model::round_energy(node center, vector<node> others) {
-    double count = 0;
-    for (int i=0; i<others.size(); i++) {
-        count += bond_energy(center, others[i]);
-    }
-    count += curve_energy(center, others);
-    return count;
-}
-
-void model::update() {
-    for (int a=0; a<this->nodes.size(); a++) {
-        node temp = this->nodes[a];
-        vector<node> others = this->adjacents[a].others;
-        temp.i += this->precision;
-        // 偏导数乘以步长
-        double i = this->step * (round_energy(temp, others) - 
-            round_energy(this->nodes[a], others)) / this->precision;
-        temp = this->nodes[a];
-        temp.j += precision;
-        double j = this->step * (round_energy(temp, others) - 
-            round_energy(this->nodes[a], others)) / this->precision;
-        temp = this->nodes[a];
-        temp.k += precision;
-        double k = this->step * (round_energy(temp, others) - 
-            round_energy(this->nodes[a], others)) / this->precision;
-        node div = {i, j, k};
-        this->nodes[a] = this->nodes[a] - div;
-    }
-    
-    // 更新邻域，准备下一次计算
-    for (int i=0; i<this->adjacents.size(); i++) {
-        for (int j=0; j<this->adjacents[i].others.size(); j++) {
-            this->adjacents[i].others[j] = this->nodes[this->adjacents[i].others_id[j]];
-        }
-    }
-}
-
-// 打乱
-void model::disorganize() {
-    std::srand(std::time(0));
-    for (int i=0; i<this->nodes.size(); i++) {
-        // 随机偏差
-        node rand_deviation = {double(rand()), double(rand()), double(rand())};
-        this->nodes[i] = this->nodes[i] + this->range/RAND_MAX*rand_deviation;
-    }
 }

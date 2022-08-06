@@ -1,29 +1,31 @@
 #include <cmath>
 #include <vector>
-#include <fstream>
 
+#include "molecule.h"
 #include "model.h"
 
 using std::vector;
 
-// 输出
-void model::dump(std::ofstream &fout) {
-    fout << "ITEM: TIMESTEP\n" << this->time << "\nITEM: NUMBER OF ATOMS\n"
-        << this->nodes.size() << "\nITEM: BOX BOUNDS ss ss ss\n";
-    
-    double boundary[6] = {0, 1, 0, 1, 0, 1};
-    for (int i=0; i<6; i++) {
-        if (i%2==0) {
-            fout << boundary[i] << ' ';
-        } else {
-            fout << boundary[i] << '\n';
-        }
-    }
-    
-    fout << "ITEM: ATOMS id type xs ys zs\n";
+model::model(para ppara): ppara(ppara) {
+    generate_nodes();
+    generate_bonds();
+    glide_bond();
+    climb_bond();
+    generate_adjacent();
     for (int i=0; i<this->nodes.size(); i++) {
-        fout << i << "\t1\t" << this->nodes[i].i << ' ' << this->nodes[i].j
-            << ' ' << this->nodes[i].k << '\n';
+        nodes[i].id = i;
+    }
+}
+
+// 重写更新函数，加入步骤
+void model::update() {
+    molecule::update();
+
+    // 更新邻域，准备下一次计算
+    for (int i=0; i<this->adjacents.size(); i++) {
+        for (int j=0; j<this->adjacents[i].others.size(); j++) {
+            this->adjacents[i].others[j] = this->nodes[this->adjacents[i].others_id[j]];
+        }
     }
 }
 
@@ -179,5 +181,3 @@ void model::climb_bond() {
 
     }*/
 }
-
-
