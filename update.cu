@@ -63,7 +63,8 @@ __device__ double energy(node center, nano::s_vector<node> others, double k, dou
 }
 
 #define OTHER_PARA others[a], ppara.k, ppara.rest_len, ppara.tau
-__global__ void cudaUpdate(node *center, nano::s_vector<node> *others, para ppara, double step, double precision) {
+__global__ void cudaUpdate(node *center, nano::s_vector<node> *others, nano::s_vector<int> *cuda_others_id, 
+        para ppara, double step, double precision) {
     // CUDA 线程编号
     #ifdef USE_CUDA
     int a = blockIdx.x;
@@ -83,43 +84,29 @@ __global__ void cudaUpdate(node *center, nano::s_vector<node> *others, para ppar
     double k = step * (energy(temp, OTHER_PARA) - energy(center[a], OTHER_PARA)) / precision;
     node div = {i, j, k};
     center[a] = center[a] - div;
+
+    // 更新邻域，准备下一次计算，CPU 上有不同步风险，只能尽可能忽略其影响
+    for (int j=0; j<others[a].size(); j++) {
+        others[a][j] = center[cuda_others_id[a][j]];
+    }
 }
 
 void model::update() {
     #ifdef USE_CUDA
-    node *cuda_nodes = this->nodes.gpu_copy();
-    nano::s_vector<node> *cuda_others = this->adjacents.gpu_copy();
+    node *cuda_nodes = this->nodes.get_gpu_data();
+    nano::s_vector<node> *cuda_others = this->adjacents.get_gpu_data();
+    nano::s_vector<int> *cuda_others_id = this->adjacents_id.get_gpu_data();
 
-	cudaUpdate<<<1,this->nodes.size()>>>(cuda_nodes, cuda_others, this->ppara, 
+    cudaUpdate<<<1,this->nodes.size()>>>(cuda_nodes, cuda_others, cuda_others_id, this->ppara, 
         this->step, this->precision);
 	
-    this->nodes.gpu_copy_back(cuda_nodes);
+    this->nodes.cpu_synchro();
+    this->adjacents.cpu_synchro();
     #else
     for (int a=0; a<this->nodes.size(); a++) {
         node others;
-        cudaUpdate(&this->nodes[a], &this->adjacents[this->nodes[a].id],
+        cudaUpdate(&this->nodes[a], &this->adjacents[this->nodes[a].id], &this->adjacents_id[a],
             this->ppara, this->step, this->precision);
     }
     #endif
-
-    // 更新邻域，准备下一次计算
-    // 我也很无赖，CPU、GPU 不能共享函数，而且无法重载，CUDA 设计需要改进
-    for (int i=0; i<this->adjacents.size(); i++) {
-        for (int j=0; j<this->adjacents[i].len; j++) {
-            this->adjacents[i].data[j] = this->nodes[this->adjacents_id[i].data[j]];
-        }
-    }
 }
-
-/*// 总能量
-double model::total_energy() {
-    double count = 0;
-    for (int i=0; i<this->nodes.size(); i++) {
-        count += curve_energy(this->nodes[i], this->adjacents[i].others);
-    }
-    for (int i=0; i<this->bonds.size(); i++) {
-        count += bond_energy(this->nodes[this->bonds[i].a],
-            this->nodes[this->bonds[i].b]);
-    }
-    return count;
-}*/

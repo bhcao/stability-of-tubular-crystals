@@ -7,7 +7,6 @@
 
 #include "molecule.h"
 #include "model.h"
-#include "figure.h"
 
 /***********************************************************
 下面是参数说明，等号后面是参数默认值
@@ -50,7 +49,7 @@ void thread(int glide, int n) {
     std::ofstream fout(name);
     
     // 声明图片类
-    // figure energy_change;
+    figure energy_change;
     for (int k=0; k<100; k++) {
         // 模型计算更新
         this_model.update();
@@ -58,11 +57,12 @@ void thread(int glide, int n) {
             // 输出当前模型至 dump 文件
             this_model.dump(fout);
             // 计算总能量并增加至图片
-            // energy_change << this_model.total_energy();
+            energy_change << this_model.total_energy();
         }
     }
     // 画图
-    // energy_change.draw("\"energy.png\"");
+    std::sprintf(name, "energy_%d_%d.png", glide, n);
+    energy_change.draw(name);
     
     // 保存 dump 文件
     fout.close();
@@ -83,15 +83,15 @@ int main(int argc, char* argv[]) {
     for (int n=7; n<14; n++)
     for (int glide=0; glide<5; glide++) {
 
-    #ifdef USE_MPI
-    if (count % task == rank) {
-    #endif
+        #ifdef USE_MPI
+        if (count % task == rank) {
+        #endif
 
-    thread(glide, n);
+        thread(glide, n);
 
-    #ifdef USE_MPI
-    }
-    #endif
+        #ifdef USE_MPI
+        }
+        #endif
     
     }
 

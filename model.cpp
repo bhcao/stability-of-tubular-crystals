@@ -11,11 +11,18 @@ model::model(para ppara_in): molecule(NUM, NUM*3), ppara(ppara_in),
     generate_bonds();
     glide_bond();
     climb_bond();
+    // 与显存结构共用，无法初始化，只能手动初始化
     for (int i=0; i<this->nodes.size(); i++) {
         nodes[i].id = i;
         this->adjacents[i].len = 0;
     }
     generate_adjacent();
+    // 显存同步
+    #ifdef USE_CUDA
+    this->adjacents.gpu_synchro();
+    this->nodes.gpu_synchro();
+    this->adjacents_id.gpu_synchro();
+    #endif
 }
 
 // 找到所有原子与之相邻的点

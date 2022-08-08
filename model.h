@@ -55,7 +55,7 @@ public:
     void update();
 
     // 系统整体的能量
-    // double total_energy();
+    double total_energy();
     
 private:
     // 生成所有原子与之相邻的点

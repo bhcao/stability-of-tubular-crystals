@@ -3,6 +3,7 @@
 
 #include <fstream>
 #include <cmath>
+#include <vector>
 
 #include "vector.h"
 
@@ -85,6 +86,23 @@ public:
     
     // 输出至文件
     void dump(std::ofstream &file);
+};
+
+class figure {
+    // 重载输入运算符
+    inline friend figure& operator<<(figure &p, double n) {
+        p.data.push_back(n);
+        return p;
+    }
+    
+public:
+    figure() = default;
+    
+    // 绘制函数
+    void draw(const char* name);
+
+private:
+    std::vector<double> data;
 };
 
 #endif // _MOLECULE_H_
