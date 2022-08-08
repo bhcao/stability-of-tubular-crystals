@@ -16,23 +16,6 @@ void molecule::disorganize() {
     }
 }
 
-void molecule::update() {
-    for (int a=0; a<this->nodes.size(); a++) {
-        node temp = this->nodes[a];
-        temp.i += this->precision;
-        // 偏导数乘以步长
-        double i = this->step * (energy(temp) - energy(this->nodes[a])) / this->precision;
-        temp = this->nodes[a];
-        temp.j += precision;
-        double j = this->step * (energy(temp) - energy(this->nodes[a])) / this->precision;
-        temp = this->nodes[a];
-        temp.k += precision;
-        double k = this->step * (energy(temp) - energy(this->nodes[a])) / this->precision;
-        node div = {i, j, k};
-        this->nodes[a] = this->nodes[a] - div;
-    }
-}
-
 // 输出
 void molecule::dump(std::ofstream &fout) {
     fout << "ITEM: TIMESTEP\n" << this->time << "\nITEM: NUMBER OF ATOMS\n"

@@ -1,59 +1,49 @@
 #include <cmath>
-#include <vector>
 
+#include "vector.h"
 #include "molecule.h"
 #include "model.h"
 
-using std::vector;
-
-model::model(para ppara): ppara(ppara) {
+#define NUM ppara_in.m*ppara_in.n*ppara_in.repeat
+model::model(para ppara_in): molecule(NUM, NUM*3), ppara(ppara_in),
+        adjacents(NUM), adjacents_id(NUM) {
     generate_nodes();
     generate_bonds();
     glide_bond();
     climb_bond();
-    generate_adjacent();
     for (int i=0; i<this->nodes.size(); i++) {
         nodes[i].id = i;
+        this->adjacents[i].len = 0;
     }
-}
-
-// 重写更新函数，加入步骤
-void model::update() {
-    molecule::update();
-
-    // 更新邻域，准备下一次计算
-    for (int i=0; i<this->adjacents.size(); i++) {
-        for (int j=0; j<this->adjacents[i].others.size(); j++) {
-            this->adjacents[i].others[j] = this->nodes[this->adjacents[i].others_id[j]];
-        }
-    }
+    generate_adjacent();
 }
 
 // 找到所有原子与之相邻的点
 void model::generate_adjacent() {
     for (int center = 0; center < this->nodes.size(); center++) {
-        adjacent padjacent;
+        nano::s_vector<node> padjacent = {0};
+        nano::s_vector<int> padjacent_id = {0};
         for (int i = 0; i < this->bonds.size(); i++) {
             // 如果键的一端是 center
             if (this->bonds[i].a == center) {
                 node other = this->nodes[this->bonds[i].b];
                 // 将坐标添加到末尾
-                padjacent.others.push_back(other);
+                padjacent.push_back(other);
                 // 同时记录位置
-                padjacent.others_id.push_back(this->bonds[i].b);
+                padjacent_id.push_back(this->bonds[i].b);
             } else if (this->bonds[i].b == center) {
                 node other = this->nodes[this->bonds[i].a];
-                padjacent.others.push_back(other);
-                padjacent.others_id.push_back(this->bonds[i].a);
+                padjacent.push_back(other);
+                padjacent_id.push_back(this->bonds[i].a);
             }
         }
         this->adjacents.push_back(padjacent);
+        this->adjacents_id.push_back(padjacent_id);
     }
 }
 
 // 生成点
 void model::generate_nodes() {
-    using std::atan, std::sin, std::cos, std::sqrt;
     
     // 转化为浮点数避免整数舍入
     double m = (double)this->ppara.m;
@@ -65,33 +55,33 @@ void model::generate_nodes() {
     if (2*n == m) {
         A = PI / 2;
     } else {
-        A = atan(sqrt(3)/2 * m / (n - m/2));
+        A = std::atan(sqrt(3)/2 * m / (n - m/2));
     }
 
     if (2*m == n) {
         B = PI / 2;
     } else {
-        B = atan(sqrt(3)/2 * n / (m - n/2));
+        B = std::atan(sqrt(3)/2 * n / (m - n/2));
     }
     
     // 半径 r（归一化）
-    double r = 1/PI/2 * sqrt(m*m+n*n-m*n);
+    double r = 1/PI/2 * std::sqrt(m*m+n*n-m*n);
 
     for (int j = 0; j < this->ppara.repeat*this->ppara.m; j++) {
         for (int i = 0; i < this->ppara.n; i++) {
             double x, y, z;
-            x = -(i-n)*cos(A) + j*cos(B);
-            z = (i-n)*sin(A) + j*sin(B);
+            x = -(i-n)*std::cos(A) + j*std::cos(B);
+            z = (i-n)*std::sin(A) + j*std::sin(B);
 
             // 如果在数轴下方
             if (z < 0) {
-                x += this->ppara.repeat*m*cos(B);
-                z += this->ppara.repeat*m*sin(B);
+                x += this->ppara.repeat*m*std::cos(B);
+                z += this->ppara.repeat*m*std::sin(B);
             }
                        
             // 实际坐标
-            y = r * (sin(x/r) + 1);
-            x = r * (cos(x/r) + 1);
+            y = r * (std::sin(x/r) + 1);
+            x = r * (std::cos(x/r) + 1);
             
             // 增加到队列
             this->nodes.push_back({this->ppara.rest_len*x,
@@ -102,20 +92,19 @@ void model::generate_nodes() {
 
 // 生成键
 void model::generate_bonds() {
-    using std::abs;
     
     for (int j = 0; j < this->ppara.repeat*this->ppara.m; j++) {
         for (int i = 0; i < this->ppara.n; i++) {
-            if (abs(this->nodes[flat(i, j)].k - this->nodes[flat(i+1, j)].k) <
+            if (std::abs(this->nodes[flat(i, j)].k - this->nodes[flat(i+1, j)].k) <
                 2*this->ppara.rest_len) {
                 // 增加到队列
                 this->bonds.push_back({flat(i, j), flat(i+1, j)});
             }
-            if (abs(this->nodes[flat(i, j)].k - this->nodes[flat(i, j+1)].k) <
+            if (std::abs(this->nodes[flat(i, j)].k - this->nodes[flat(i, j+1)].k) <
                 2*this->ppara.rest_len) {
                 this->bonds.push_back({flat(i, j), flat(i, j+1)});
             }
-            if (abs(this->nodes[flat(i, j)].k - this->nodes[flat(i-1, j+1)].k) <
+            if (std::abs(this->nodes[flat(i, j)].k - this->nodes[flat(i-1, j+1)].k) <
                 2*this->ppara.rest_len) {
                 this->bonds.push_back({flat(i, j), flat(i-1, j+1)});
             }

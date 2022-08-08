@@ -7,10 +7,9 @@
 #define _MODEL_H_
 
 #include <fstream>
-#include <vector>
 
+#include "vector.h"
 #include "molecule.h"
-using std::vector;
 
 // 参数默认值
 #define default_para {13,13,0.1,1,3,3,3,1,3e-7}
@@ -25,12 +24,6 @@ typedef struct {
     double k, tau;
 } para;
 
-// 通过数组储存相邻结构
-typedef struct {
-    vector<int> others_id;
-    vector<node> others;
-} adjacent;
-
 // 集合了节点、键、相邻的类
 class model: public molecule {
 public:
@@ -38,7 +31,10 @@ public:
     model(para ppara);
     
     para ppara;
-    vector<adjacent> adjacents;
+
+    // 通过数组储存相邻结构
+    nano::vector<nano::s_vector<int>> adjacents_id;
+    nano::vector<nano::s_vector<node>> adjacents;
 
      // 由节点的二维坐标计算标识符
     inline int flat(int i, int j) {
@@ -55,14 +51,11 @@ public:
         return i + this->ppara.n*j;
     }
     
-    // 重写更新函数
+    // 更新函数
     void update();
 
     // 系统整体的能量
-    double total_energy();
-
-    // 虚函数的实现
-    double energy(node center) override;
+    // double total_energy();
     
 private:
     // 生成所有原子与之相邻的点
@@ -77,13 +70,6 @@ private:
     void climb_bond();
     // 交换两根键
     void replace_bond(bond b1, bond b2);
-    
-    // 求两个键之间的键能
-    double bond_energy(node p1, node p2);
-    // 求一个点周围曲率能量，即能量函数第二项
-    double curve_energy(node center, vector<node> others);
-    // 生成一个点周围的能量
-    double round_energy(node center, vector<node> others);
 };
 
 #endif // _MODEL_H_
