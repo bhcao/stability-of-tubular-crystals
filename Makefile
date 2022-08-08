@@ -1,9 +1,24 @@
-TARGET = $(shell ls | grep .cpp$ | grep -v main.cpp)
+MAIN = main.cpp
+SOURCE = figure.cpp model.cpp molecule.cpp
+CPPENERGY = energy.cpp
+CUDAENERGY = energy.cu
+LIB = nano.a
+LDFLAGS = -L/usr/lib/cuda/lib64 -lcudart
 
 gpu:
-	nvcc -D USE_CUDA main.cpp $(TARGET) energy.cu -o main.out --expt-relaxed-constexpr
+	nvcc -D USE_CUDA $(MAIN) $(SOURCE) $(CUDAENERGY) -o main.out --expt-relaxed-constexpr
 
-build:
+cpu:
 	mv energy.cu energy.cpp
-	g++ main.cpp $(TARGET) energy.cpp -o main.out
+	g++ $(MAIN) $(SOURCE) $(CPPENERGY) -o main.out
 	mv energy.cpp energy.cu
+
+cpu-mpi:
+	mv energy.cu energy.cpp
+	mpic++ -D USE_MPI $(MAIN) $(SOURCE) $(CPPENERGY) -o main.out -g2
+	mv energy.cpp energy.cu
+
+gpu-mpi:
+	nvcc -D USE_CUDA -lib $(SOURCE) $(CUDAENERGY) --expt-relaxed-constexpr -o $(LIB)
+	mpic++ -D USE_MPI $(MAIN) $(LIB) $(LDFLAGS) -o main.out
+	rm $(LIB)

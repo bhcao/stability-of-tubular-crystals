@@ -1,0 +1,22 @@
+# figure
+
+*.png
+
+# binary
+
+*.o
+*.out
+*.so
+*.exe
+
+# lammps
+
+*.dump
+
+# vscode
+
+.vscode
+
+# build
+
+build
