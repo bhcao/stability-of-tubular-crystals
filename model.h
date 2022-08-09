@@ -3,8 +3,8 @@
  *    中心点为 center，相邻点为 other，所有相邻点为 others
  ********************************************************/
 
-#ifndef _MODEL_H_
-#define _MODEL_H_
+#ifndef NADO_MODEL_H_
+#define NANO_MODEL_H_
 
 #include <fstream>
 
@@ -68,8 +68,16 @@ private:
     void glide_bond();
     // 攀移
     void climb_bond();
+    
     // 交换两根键
-    void replace_bond(bond b1, bond b2);
+    inline void replace_bond(bond from, bond to) {
+        for (int i=0; i<this->bonds.size(); i++) {
+            if (this->bonds[i] == from) {
+                this->bonds[i] = to;
+                return;
+            }
+        }
+    }
 };
 
-#endif // _MODEL_H_
+#endif // NANO_MODEL_H_

@@ -119,15 +119,6 @@ void model::generate_bonds() {
     }
 }
 
-void model::replace_bond(bond from, bond to) {
-    for (int i=0; i<this->bonds.size(); i++) {
-        if (this->bonds[i] == from) {
-            this->bonds[i] = to;
-            return;
-        }
-    }
-}
-
 // TODO
 void model::glide_bond() {
     // 初始原子 j 位置 begin number

@@ -1,5 +1,5 @@
-#ifndef _MOLECULE_H_
-#define _MOLECULE_H_
+#ifndef NANO_MOLECULE_H_
+#define NANO_MOLECULE_H_
 
 #include <fstream>
 #include <cmath>
@@ -105,4 +105,4 @@ private:
     std::vector<double> data;
 };
 
-#endif // _MOLECULE_H_
+#endif // NANO_MOLECULE_H_

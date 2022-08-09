@@ -7,13 +7,37 @@
 
 using std::rand;
 
-// 打乱
+double gaussrand() {
+    static double V1, V2, S;
+    static int phase = 0;
+    double X;
+    if (phase == 0) {
+        do {
+            double U1 = (double)rand() / RAND_MAX;
+            double U2 = (double)rand() / RAND_MAX;
+            V1 = 2*U1 - 1;
+            V2 = 2*U2 - 1;
+            S = V1*V1 + V2*V2;
+        } while (S >= 1 || S == 0);
+        X = V1 * std::sqrt(-2 * std::log(S) / 5);
+    } else {
+        X = V2 * std::sqrt(-2 * std::log(S) / 5);
+    }
+    phase = 1 - phase;
+    return X;
+}
+
+// 随机函数随距离成高斯分布
 void molecule::disorganize() {
     std::srand(std::time(0));
     for (int i=0; i<this->nodes.size(); i++) {
         // 随机偏差
-        node rand_deviation = {double(rand()), double(rand()), double(rand())};
-        this->nodes[i] = this->nodes[i] + this->range/RAND_MAX*rand_deviation;
+        double r = gaussrand();
+        double phi = 2*PI * (double)rand() / RAND_MAX;
+        double theta = PI/2 * ((double)rand() / RAND_MAX - 0.5);
+        node rand_deviation = {std::cos(phi)*std::sin(theta), std::sin(phi)*std::sin(theta),
+            std::cos(theta)};
+        this->nodes[i] = this->nodes[i] + this->range*r*rand_deviation;
     }
 }
 

@@ -1,5 +1,5 @@
-#ifndef _VECTOR_H_
-#define _VECTOR_H_
+#ifndef NANO_VECTOR_H_
+#define NANO_VECTOR_H_
 
 #ifdef USE_CUDA
 #include <cuda_runtime.h>
@@ -85,4 +85,4 @@ namespace nano {
     };
 }
 
-#endif // _VECTOR_H_
+#endif // NANO_VECTOR_H_
