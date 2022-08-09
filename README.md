@@ -5,7 +5,7 @@
 
 [Shape multistability in ﬂexible tubular crystals through interactions of mobile dislocations](https://www.pnas.org/doi/pdf/10.1073/pnas.2115423119)
 
-![我们生成的模型](https://gitee.com/Bovera/nanotube/model.png)
+![我们生成的模型](https://gitee.com/Bovera/nanotube/raw/master/model.png)
 
 ### 主函数示例
 ```cpp
