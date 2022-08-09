@@ -15,7 +15,7 @@ cpu:
 
 cpu-mpi:
 	mv update.cu update.cpp
-	mpic++ -D USE_MPI $(MAIN) $(SOURCE) $(CPPENERGY) -o main.out -g2
+	mpic++ -D USE_MPI $(MAIN) $(SOURCE) $(CPPENERGY) -o main.out
 	mv update.cpp update.cu
 
 gpu-mpi:
