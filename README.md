@@ -1,11 +1,28 @@
 # nanotube
 
 ### 介绍
-利用梯度下降法模拟三角形纳米管在位错下的稳定形状，复刻论文
+利用梯度下降法模拟三角形纳米管在位错下的稳定形状，复刻以下论文
 
 [Shape multistability in ﬂexible tubular crystals through interactions of mobile dislocations](https://www.pnas.org/doi/pdf/10.1073/pnas.2115423119)
+> Zakharov A, Beller D A. Shape multistability in flexible tubular crystals through interactions of mobile dislocations[J]. Proceedings of the National Academy of Sciences, 2022, 119(6): e2115423119.
 
-![我们生成的模型](https://gitee.com/Bovera/nanotube/raw/master/model.png)
+![模型直观图](https://gitee.com/Bovera/nanotube/raw/master/model.png)
+<center> 图 1. 模型直观图 </center>
+
+### 模型及位错表示
+
+如图 2，边长为 $m$，$n$ 的平行四边形沿 $A$、$B$ 点重合后，将数轴下方平移拼接至上方，即构成了叶序数为 $(m,n)$ 的圆柱。其半径、角度等参数很容易得出。
+
+![模型示意](https://gitee.com/Bovera/nanotube/raw/master/tube.png)
+<center> 图 2. 模型示意 </center>
+
+下面是错位的表示，其中绿线代表生成的新键，蓝点代表增加或减少的原子，红点为位错原点（初始化时位错发生的起点）。
+
+![位错生成示意](https://gitee.com/Bovera/nanotube/raw/master/dislocation.png)
+<center> 图 3. 位错生成示意 </center>
+
+![位错方向约定](https://gitee.com/Bovera/nanotube/raw/master/direction.png)
+<center> 图 4. 位错方向约定 </center>
 
 ### 主函数示例
 ```cpp
@@ -80,3 +97,8 @@ mpic++ -D USE_MPI main.cpp nano.a -L/usr/lib/cuda/lib64 -lcudart -o main.out
 ```
 mpic++ -D USE_MPI main.cpp energy.cpp model.cpp molecule.cpp update.cpp -o main.out
 ```
+
+### 目标
+1. 优化相关算法，充分利用显卡，提高运行速度，减少不必要的内存拷贝；
+2. 重构代码，使得格式更加清新，模块化更加突出；
+3. 测试参数，修改 bug。
