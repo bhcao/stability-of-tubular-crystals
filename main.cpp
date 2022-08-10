@@ -19,7 +19,6 @@
     int glide = 3, climb = 3;   // 位错滑移和攀移的步数
     int repeat = 3;             // 模型重复的次数（增长模型）
     double k = 1, tau = 3e-7;   // 能量参数（第一项键能、第二项曲率）
-    bool far = true;            // 攀移时箭头是否远离
 
 运行时参数：
     double step = 2e-5;      // 更新的步长，就是向梯度方向前进多少

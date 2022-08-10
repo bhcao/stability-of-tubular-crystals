@@ -13,7 +13,7 @@
 #include "molecule.h"
 
 // 参数默认值
-#define default_para {13,13,0.1,1,3,3,3,1,3e-7,true}
+#define default_para {13,13,0.1,1,3,3,3,1,3e-7}
 
 class pos2d {
     friend pos2d operator+(pos2d &p1, pos2d &p2) {
@@ -34,7 +34,6 @@ typedef struct {
     int glide, climb;
     int repeat;
     double k, tau;
-    bool far;
 } para;
 
 inline node average(node p1, node p2) {

@@ -54,6 +54,25 @@ namespace nano {
         inline T& operator[](int i) { return data[i]; }
         inline int size() { return this->len; }
         
+        // 交换两个
+        void replace(T from, T to) {
+            for (int i=0; i<this->len; i++) {
+                if (this->data[i] == from) {
+                    this->data[i] = to;
+                    break;
+                }
+            }
+        }
+
+        // 移除
+        void remove(T from) {
+            for (int i=0; i<this->len; i++) {
+                if (this->data[i] == from) {
+                    this->data[i] = this->data[--len];
+                    break;
+                }
+            }
+        }
         
         #ifdef USE_CUDA
         // 拷贝至显存

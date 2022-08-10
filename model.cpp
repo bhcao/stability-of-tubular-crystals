@@ -4,9 +4,10 @@
 #include "molecule.h"
 #include "model.h"
 
+// 保证增原子攀移时不会越界，同时防止减原子攀移初始时越界
 #define NUM ppara_in.m*ppara_in.n*ppara_in.repeat
-model::model(para ppara_in): molecule(NUM, NUM*3), ppara(ppara_in),
-        adjacents(NUM), adjacents_id(NUM) {
+model::model(para ppara_in): molecule(NUM, NUM*3+3*std::abs(ppara_in.climb)),
+        ppara(ppara_in), adjacents(NUM), adjacents_id(NUM) {
     generate_nodes();
     generate_bonds();
     glide_climb();
@@ -146,31 +147,51 @@ void model::glide_climb() {
         for (int i=0; i < std::abs(this->ppara.glide); i++) {
             from = {flat(bn), flat(bn + center)};
             to = {flat(bn + left), flat(bn + right)};
-            // 交换两根键，原 replace_bond 函数
-            for (int i=0; i<this->bonds.size(); i++) {
-                if (this->bonds[i] == from) {
-                    this->bonds[i] = to;
-                    break;
-                }
-            }
+            this->bonds.replace(from, to);
             bn = bn + go;
         }
     }
     
-    // 攀移
-    if (this->ppara.climb > 0) {
+    // 攀移，尽量增大 repeat（大于等于 3），避免与最后几个原子重合造成隐患
+    if (this->ppara.climb < 0) {
         // 减原子攀移
-        for (int i=0; i<this->ppara.climb; i++) {
-            this->nodes[flat(bn + other)] = this->nodes.pop_back();
-            
-        }
-    } else if (this->ppara.climb < 0) {
-        // 增原子攀移
         for (int i=0; i<-this->ppara.climb; i++) {
-
+            this->nodes[flat(bn + other)] = this->nodes.pop_back();
+            bn = bn + other;
+            this->bonds.remove({flat(bn), flat(bn + left)});
+            this->bonds.remove({flat(bn), flat(bn - left)});
+            this->bonds.remove({flat(bn), flat(bn + right)});
+            this->bonds.remove({flat(bn), flat(bn - right)});
+            this->bonds.replace({flat(bn), flat(bn + center)},
+                {flat(bn + go), flat(bn - go)});
+            this->bonds.push_back({flat(bn+go), flat(bn+other)});
+            for (int i=0; i<this->bonds.size(); i++) {
+                if (this->bonds[i].a == this->nodes.size()) {
+                    this->bonds[i].a = flat(bn);
+                }
+            }
+            bn = bn + go;
         }
-    }
+        this->pdis_pair.end[0] = flat(bn);
+        this->pdis_pair.end[1] = flat(bn + other);
 
-    this->pdis_pair.end[0] = flat(bn);
-    this->pdis_pair.end[1] = flat(bn + other);
+    } else if (this->ppara.climb > 0) {
+        // 增原子攀移
+        int last;
+        for (int i=0; i<-this->ppara.climb; i++) {
+            this->nodes.push_back(average(this->nodes[flat(bn)],
+                this->nodes[flat(bn-go)]));
+            last = this->nodes.size()-1;
+            this->bonds.push_back({last, flat(bn + other)});
+            // 不知为什么不能连写
+            pos2d temp = bn + other;
+            this->bonds.push_back({last, flat(temp - go)});
+            this->bonds.push_back({last, flat(bn - center)});
+            this->bonds.replace({flat(bn), flat(bn - go)},
+                {last, flat(bn - go)});
+            bn = bn - center;
+        }
+        this->pdis_pair.end[0] = flat(bn);
+        this->pdis_pair.end[1] = last;
+    }
 }
