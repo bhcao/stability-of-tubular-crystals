@@ -47,7 +47,7 @@ class node {
         node temp = p1 - p2;
         return sqrt(temp.i*temp.i + temp.j*temp.j + temp.k*temp.k);
     }
-
+    
 public:
     node() = default;
     double i, j, k;
@@ -66,6 +66,10 @@ public:
     int a, b;
 };
 
+typedef struct {
+    int begin[2], end[2];
+} dis_pair;
+
 // 集合了节点、键、相邻的类
 class molecule {
 public:
@@ -76,6 +80,8 @@ public:
     nano::vector<node> nodes;
     nano::vector<bond> bonds;
     
+    dis_pair pdis_pair;
+
     double step;      // 更新的步长
     int time;         // 当前时间（运行次数）
     double precision; // 求导精度（增加的 delta 长度）

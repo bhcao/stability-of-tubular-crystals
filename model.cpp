@@ -119,45 +119,39 @@ void model::generate_bonds() {
     }
 }
 
-// TODO
 void model::glide_bond() {
     // 初始原子 j 位置 begin number
-    double bn = (this->ppara.repeat + 1) * double(this->ppara.m) / 2;
+    pos2d bn = {0, (this->ppara.repeat + 1) * this->ppara.m / 2};
+    this->pdis_pair.begin[1] = flat(bn);
+
+    bond from, to;
+    pos2d left, right, center;
     switch (this->ppara.direction) {
+    case 0:
+        left = {0,-1}; right = {1,0};
+        break;
     case 1:
-        if (this->ppara.glide < 0) {
-            for (int i=0; i < -this->ppara.glide; i++) {
-                //replace_bond({flat(0, bn+i+1), flat(1, bn+i)}, {flat(0, bn+i), flat(1, bn+i+1)});
-            }
-        } else if (this->ppara.glide > 0) {
-            for (int i=0; i < this->ppara.glide; i++) {
-                replace_bond({flat(0, bn+i+1), flat(1, bn+i)}, {flat(0, bn+i), flat(1, bn+i+1)});
-            }
-        }
+        left = {1,-1}; right = {0,1};
         break;
     case 2:
-        if (this->ppara.glide < 0) {
-            for (int i=0; i < -this->ppara.glide; i++) {
-                //replace_bond({flat(0, bn+i+1), flat(1, bn+i)}, {flat(0, bn+i), flat(1, bn+i+1)});
-            }
-        } else if (this->ppara.glide > 0) {
-            for (int i=0; i < this->ppara.glide; i++) {
-                //replace_bond({flat(0, bn+i+1), flat(1, bn+i)}, {flat(0, bn+i), flat(1, bn+i+1)});
-            }
-        }
-        break;
-    case 3:
-        if (this->ppara.glide < 0) {
-            for (int i=0; i < -this->ppara.glide; i++) {
-                //replace_bond({flat(0, bn+i+1), flat(1, bn+i)}, {flat(0, bn+i), flat(1, bn+i+1)});
-            }
-        } else if (this->ppara.glide > 0) {
-            for (int i=0; i < this->ppara.glide; i++) {
-                //replace_bond({flat(0, bn+i+1), flat(1, bn+i)}, {flat(0, bn+i), flat(1, bn+i+1)});
-            }
-        }
-        break;
+        left = {1,0}; right = {-1,1};
     }
+    
+    center = left + right;
+    pos2d go = this->ppara.glide > 0 ? left: right;
+    pos2d other = this->ppara.glide < 0 ? left: right;
+    this->pdis_pair.begin[0] = flat(bn + other);
+    
+    if (this->ppara.glide != 0) {
+        for (int i=0; i < std::abs(this->ppara.glide); i++) {
+            from = {flat(bn), flat(bn + center)};
+            to = {flat(bn + left), flat(bn + right)};
+            replace_bond(from, to);
+            bn = bn + go;
+        }
+    }
+    this->pdis_pair.end[0] = flat(bn);
+    this->pdis_pair.end[1] = flat(bn + other);
 }
 
 // TODO

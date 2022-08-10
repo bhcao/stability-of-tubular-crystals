@@ -1,5 +1,6 @@
 #include <fstream>
 #include <cstdio>
+#include <iostream>
 
 #ifdef USE_MPI
 #include <mpi.h>
@@ -40,6 +41,10 @@ void thread(int glide, int n) {
     this_model.precision = 1e-7;
     this_model.step = 1e-8;
     
+    double x, z;
+    this_model.dis_pair_distance(&x, &z);
+    std::cout << "位错距离为 x=" << x << ", z=" << z;
+
     // 退火
     this_model.disorganize();
     

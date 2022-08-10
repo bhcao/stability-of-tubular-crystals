@@ -9,20 +9,24 @@
 ![模型直观图](https://gitee.com/Bovera/nanotube/raw/master/model.png)  
 图 1. 模型直观图
 
-### 模型及位错表示
+### 模型表示
 
 如图 2，边长为 $m$，$n$ 的平行四边形沿 $A$、$B$ 点重合后，将数轴下方平移拼接至上方，即构成了叶序数为 $(m,n)$ 的圆柱。其半径、角度等参数很容易得出。
 
 ![模型示意](https://gitee.com/Bovera/nanotube/raw/master/tube.png)  
 图 2. 模型示意
 
+### 位错表示
+
 下面是错位的表示，其中绿线代表生成的新键，蓝点代表增加或减少的原子，红点为位错原点（初始化时位错发生的起点）。
 
 ![位错生成示意](https://gitee.com/Bovera/nanotube/raw/master/dislocation.png)  
 图 3. 位错生成示意
 
-![位错方向约定](https://gitee.com/Bovera/nanotube/raw/master/direction.png)  
-图 4. 位错方向约定
+滑移相对与整体有三个方向，如图 4 所示，右下方键的移动方法与已有重复，故不再考虑。生成滑移时，滑移先从原点产生，接着位错远点根据滑移步数正负号移动。蓝色箭头即移动方向。
+
+![滑移方向约定](https://gitee.com/Bovera/nanotube/raw/master/direction.png)  
+图 4. 滑移方向约定
 
 ### 主函数示例
 ```cpp
@@ -30,6 +34,11 @@ para ppara = default_para; // 设置参数为模型默认参数
 ppara.repeat = 10;         // 修改模型参数
 model this_model(ppara);   // 以 ppara 参数生成模型
 // 生成模型后再修改模型参数没用
+
+// 求位错间的距离，x 为水平距离（沿管面），z 为轴向距离
+double x, z;
+this_model.dis_pair_distance(&x, &z);
+std::cout << x << z;
 
 this_model.precision = 1e-7;     // 更改运行时参数
 this_model.disorganize();        // 退火
