@@ -67,6 +67,7 @@ fout.close();                   // 保存 dump 文件
 |`int glide = 3, climb = 3`  | 位错滑移和攀移的步数 |
 |`int repeat = 3`            | 模型重复的次数（增长模型）|
 |`double k = 1, tau = 3e-7`  | 能量参数（第一项键能、第二项曲率）|
+|`bool far = true;`          | 攀移时箭头是否远离 |
 
 运行时参数：
 

@@ -13,7 +13,7 @@
 #include "molecule.h"
 
 // 参数默认值
-#define default_para {13,13,0.1,1,3,3,3,1,3e-7}
+#define default_para {13,13,0.1,1,3,3,3,1,3e-7,true}
 
 class pos2d {
     friend pos2d operator+(pos2d &p1, pos2d &p2) {
@@ -34,6 +34,7 @@ typedef struct {
     int glide, climb;
     int repeat;
     double k, tau;
+    bool far;
 } para;
 
 inline node average(node p1, node p2) {
@@ -97,20 +98,8 @@ private:
     void generate_nodes();
     // 生成键
     void generate_bonds();
-    // 滑移
-    void glide_bond();
-    // 攀移
-    void climb_bond();
-    
-    // 交换两根键
-    inline void replace_bond(bond from, bond to) {
-        for (int i=0; i<this->bonds.size(); i++) {
-            if (this->bonds[i] == from) {
-                this->bonds[i] = to;
-                return;
-            }
-        }
-    }
+    // 滑移和攀移
+    void glide_climb();
 };
 
 #endif // NANO_MODEL_H_

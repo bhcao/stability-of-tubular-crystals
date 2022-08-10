@@ -9,8 +9,7 @@ model::model(para ppara_in): molecule(NUM, NUM*3), ppara(ppara_in),
         adjacents(NUM), adjacents_id(NUM) {
     generate_nodes();
     generate_bonds();
-    glide_bond();
-    climb_bond();
+    glide_climb();
     // 与显存结构共用，无法初始化，只能手动初始化
     for (int i=0; i<this->nodes.size(); i++) {
         nodes[i].id = i;
@@ -119,12 +118,11 @@ void model::generate_bonds() {
     }
 }
 
-void model::glide_bond() {
+void model::glide_climb() {
     // 初始原子 j 位置 begin number
     pos2d bn = {0, (this->ppara.repeat + 1) * this->ppara.m / 2};
     this->pdis_pair.begin[1] = flat(bn);
 
-    bond from, to;
     pos2d left, right, center;
     switch (this->ppara.direction) {
     case 0:
@@ -142,23 +140,37 @@ void model::glide_bond() {
     pos2d other = this->ppara.glide < 0 ? left: right;
     this->pdis_pair.begin[0] = flat(bn + other);
     
+    // 滑移
     if (this->ppara.glide != 0) {
+        bond from, to;
         for (int i=0; i < std::abs(this->ppara.glide); i++) {
             from = {flat(bn), flat(bn + center)};
             to = {flat(bn + left), flat(bn + right)};
-            replace_bond(from, to);
+            // 交换两根键，原 replace_bond 函数
+            for (int i=0; i<this->bonds.size(); i++) {
+                if (this->bonds[i] == from) {
+                    this->bonds[i] = to;
+                    break;
+                }
+            }
             bn = bn + go;
         }
     }
+    
+    // 攀移
+    if (this->ppara.climb > 0) {
+        // 减原子攀移
+        for (int i=0; i<this->ppara.climb; i++) {
+            this->nodes[flat(bn + other)] = this->nodes.pop_back();
+            
+        }
+    } else if (this->ppara.climb < 0) {
+        // 增原子攀移
+        for (int i=0; i<-this->ppara.climb; i++) {
+
+        }
+    }
+
     this->pdis_pair.end[0] = flat(bn);
     this->pdis_pair.end[1] = flat(bn + other);
-}
-
-// TODO
-void model::climb_bond() {
-    /*if (climb > 0) {
-
-    } else if (climb < 0) {
-
-    }*/
 }

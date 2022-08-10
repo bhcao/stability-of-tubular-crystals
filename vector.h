@@ -50,6 +50,7 @@ namespace nano {
 
         // std::vector 兼容函数
         inline void push_back(T in) { this->data[len++] = in;}
+        inline T pop_back() { return this->data[--len];}
         inline T& operator[](int i) { return data[i]; }
         inline int size() { return this->len; }
         
