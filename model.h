@@ -75,7 +75,7 @@ public:
             this->nodes[this->pdis_pair.begin[1]]);
         node end = average(this->nodes[this->pdis_pair.end[0]],
             this->nodes[this->pdis_pair.end[1]]);
-        node temp = average(begin, end);
+        node temp = {begin.i - end.i, begin.j - end.j, begin.k - end.k};
         double m = (double)this->ppara.m;
         double n = (double)this->ppara.n;
         double r = this->ppara.rest_len * 1/PI/2 * std::sqrt(m*m+n*n-m*n);

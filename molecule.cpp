@@ -78,7 +78,7 @@ void figure::draw(const char* name){
     for (int i=0; i<this->data.size()-1; i++) {
         fout << this->data[i] << ", ";
     }
-    fout << this->data[this->data.size()];
+    fout << this->data[this->data.size()-1];
     fout << "])\nplt.figure()\n"
             "plt.plot(x, y)\nplt.savefig(\""
          << name << "\")";
