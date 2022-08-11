@@ -4,16 +4,21 @@
 #include "molecule.h"
 #include "model.h"
 
+inline int relu(int i) {
+    if (i<0) return 0;
+    else return i;
+}
+
 // 保证增原子攀移时不会越界，同时防止减原子攀移初始时越界
-#define NUM ppara_in.m*ppara_in.n*ppara_in.repeat
-model::model(para ppara_in): molecule(NUM, NUM*3+3*std::abs(ppara_in.climb)),
+#define NUM ppara_in.m*ppara_in.n*ppara_in.repeat + relu(ppara_in.climb)
+model::model(para ppara_in): molecule(NUM, 3*NUM),
         ppara(ppara_in), adjacents(NUM), adjacents_id(NUM) {
     generate_nodes();
     generate_bonds();
     glide_climb();
     // 与显存结构共用，无法初始化，只能手动初始化
     for (int i=0; i<this->nodes.size(); i++) {
-        nodes[i].id = i;
+        this->nodes[i].id = i;
         this->adjacents[i].len = 0;
     }
     generate_adjacent();
@@ -172,13 +177,11 @@ void model::glide_climb() {
             }
             bn = bn + go;
         }
-        this->pdis_pair.end[0] = flat(bn);
-        this->pdis_pair.end[1] = flat(bn + other);
 
     } else if (this->ppara.climb > 0) {
         // 增原子攀移
         int last;
-        for (int i=0; i<-this->ppara.climb; i++) {
+        for (int i=0; i<this->ppara.climb; i++) {
             this->nodes.push_back(average(this->nodes[flat(bn)],
                 this->nodes[flat(bn-go)]));
             last = this->nodes.size()-1;
@@ -193,5 +196,9 @@ void model::glide_climb() {
         }
         this->pdis_pair.end[0] = flat(bn);
         this->pdis_pair.end[1] = last;
+        return;
     }
+    
+    this->pdis_pair.end[0] = flat(bn);
+    this->pdis_pair.end[1] = flat(bn + other);
 }

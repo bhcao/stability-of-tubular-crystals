@@ -57,8 +57,8 @@ void molecule::dump(std::ofstream &fout) {
     
     fout << "ITEM: ATOMS id type xs ys zs\n";
     for (int i=0; i<this->nodes.size(); i++) {
-        if (i == this->pdis_pair.begin[0] || this->pdis_pair.begin[0] ||
-            this->pdis_pair.end[0] || this->pdis_pair.end[0]) {
+        if (i == this->pdis_pair.begin[0] || i == this->pdis_pair.begin[1] ||
+            i == this->pdis_pair.end[0] || i == this->pdis_pair.end[1]) {
             fout << i << "\t2\t" << this->nodes[i].i << ' ' << this->nodes[i].j
                 << ' ' << this->nodes[i].k << '\n';
         } else {

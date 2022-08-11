@@ -40,7 +40,7 @@ namespace nano {
         }
 
         inline ~vector() {
-            free(this->data);
+            delete []this->data;
             #ifdef USE_CUDA
             if (this->gpu_data != NULL) {
                 cudaFree(this->gpu_data);
