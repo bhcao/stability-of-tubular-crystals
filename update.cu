@@ -1,4 +1,5 @@
 #include <cmath>
+#include <iostream>
 
 #include "vector.h"
 #include "molecule.h"
@@ -84,10 +85,18 @@ __global__ void cudaUpdate(node *center, nano::s_vector<node> *others, nano::s_v
     double k = step * (energy(temp, OTHER_PARA) - energy(center[a], OTHER_PARA)) / precision;
     node div = {i, j, k};
     center[a] = center[a] - div;
+}
 
-    // 更新邻域，准备下一次计算，CPU 上有不同步风险，只能尽可能忽略其影响
+// 更新邻域，准备下一次计算，分立函数保证同步
+__global__ void cudaUpdateAdj(node *begin, nano::s_vector<node> *others, nano::s_vector<int> *cuda_others_id) {
+    #ifdef USE_CUDA
+    int a = blockIdx.x;
+    #else
+    int a = 0;
+    #endif
+
     for (int j=0; j<others[a].size(); j++) {
-        others[a][j] = center[cuda_others_id[a][j]];
+        others[a][j] = begin[cuda_others_id[a][j]];
     }
 }
 
@@ -96,17 +105,20 @@ void model::update() {
     node *cuda_nodes = this->nodes.get_gpu_data();
     nano::s_vector<node> *cuda_others = this->adjacents.get_gpu_data();
     nano::s_vector<int> *cuda_others_id = this->adjacents_id.get_gpu_data();
-
-    cudaUpdate<<<1,this->nodes.size()>>>(cuda_nodes, cuda_others, cuda_others_id, this->ppara, 
+    
+    cudaUpdate<<<this->nodes.size(), 1>>>(cuda_nodes, cuda_others, cuda_others_id, this->ppara, 
         this->step, this->precision);
-	
+	cudaUpdateAdj<<<this->nodes.size(), 1>>>(cuda_nodes, cuda_others, cuda_others_id);
+
     this->nodes.cpu_synchro();
     this->adjacents.cpu_synchro();
     #else
     for (int a=0; a<this->nodes.size(); a++) {
-        node others;
-        cudaUpdate(&this->nodes[a], &this->adjacents[this->nodes[a].id], &this->adjacents_id[a],
+        cudaUpdate(&this->nodes[a], &this->adjacents[a], &this->adjacents_id[a],
             this->ppara, this->step, this->precision);
+    }
+    for (int a=0; a<this->nodes.size(); a++) {
+        cudaUpdateAdj(&this->nodes[0], &this->adjacents[a], &this->adjacents_id[a]);
     }
     #endif
 }
