@@ -14,16 +14,16 @@ __device__ double curve_energy(node center, nano::s_vector<node> others, double 
     nano::s_vector<double> angle = {0};
     for (int i=0; i<others.size()-1; i++) {
         // 计算任意三点之间的所成角，n1, n3 为两边，n2 为顶点
-        double l_12 = dist(center, others[i]);
-        double l_23 = dist(center, others[i+1]);
-        double l_13 = dist(others[i], others[i+1]);
-        angle.push_back(std::acos(l_12/2/l_23 + l_23/2/l_12 - l_13*l_13/2/l_23/l_12));
+        double l_1 = dist(center, others[i]);
+        double l_2 = dist(center, others[i+1]);
+        double product = (others[i+1]-center)*(others[i]-center);
+        angle.push_back(std::acos(product/l_2/l_1));
     }
     
-    double l_12 = dist(center, others[0]);
-    double l_23 = dist(center, others[others.size()-1]);
-    double l_13 = dist(others[0], others[others.size()-1]);
-    angle.push_back(std::acos(l_12/2/l_23 + l_23/2/l_12 - l_13*l_13/2/l_23/l_12));
+    double l_1 = dist(center, others[0]);
+    double l_2 = dist(center, others[others.size()-1]);
+    double product = (others[others.size()-1]-center)*(others[0]-center);
+    angle.push_back(std::acos(product/l_2/l_1));
 
     // 计算周围区域面积
     double size = 0;
