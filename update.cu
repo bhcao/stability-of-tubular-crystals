@@ -77,12 +77,15 @@ __global__ void cudaUpdate(node *center, nano::s_vector<node> *others, nano::s_v
     temp.i += precision;
     // 偏导数乘以步长
     double i = step * (energy(temp, OTHER_PARA) - energy(center[a], OTHER_PARA)) / precision;
+    if (i>step) i=step;
     temp = center[a];
     temp.j += precision;
     double j = step * (energy(temp, OTHER_PARA) - energy(center[a], OTHER_PARA)) / precision;
+    if (j>step) j=step;
     temp = center[a];
     temp.k += precision;
     double k = step * (energy(temp, OTHER_PARA) - energy(center[a], OTHER_PARA)) / precision;
+    if (j>step) j=step;
     node div = {i, j, k};
     center[a] = center[a] - div;
     

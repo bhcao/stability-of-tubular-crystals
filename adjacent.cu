@@ -41,26 +41,28 @@ __global__ void cudaGenerate_adjacent(node *pnode, bond *bonds, int bonds_len,
         nano::s_vector<node> *padjacent, nano::s_vector<int> *padjacent_id, node *nodes) {
 #ifdef USE_CUDA
     int a = blockIdx.x;
+    int node_id = a;
 #else
     int a = 0;
+    int node_id = pnode-nodes;
 #endif
     
     padjacent_id[a] = {0};
     padjacent[a] = {0};
     for (int i = 0; i < bonds_len; i++) {
         // 如果键的一端是 center
-        if (bonds[i].a == a) {
+        if (bonds[i].a == node_id) {
             // 记录位置
             padjacent_id[a].push_back(bonds[i].b);
-        } else if (bonds[i].b == a) {
+        } else if (bonds[i].b == node_id) {
             padjacent_id[a].push_back(bonds[i].a);
         }
     }
     
-    rearrange(padjacent_id, nodes, pnode + a);
+    rearrange(&padjacent_id[a], nodes, &pnode[a]);
 
     for (int i=0; i<padjacent_id[a].size(); i++) {
-        padjacent[a].push_back(nodes[i]);
+        padjacent[a].push_back(nodes[padjacent_id[a][i]]);
     }
 }
 
