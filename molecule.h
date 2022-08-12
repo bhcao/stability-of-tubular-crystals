@@ -29,6 +29,11 @@ class node {
     __device__ friend inline node operator*(node p2, double n1) {
         return {n1*p2.i, n1*p2.j, n1*p2.k};
     }
+    
+    // 除法，只能除数
+    __device__ friend inline node operator/(node p2, double n1) {
+        return {p2.i/n1, p2.j/n1, p2.k/n1};
+    }
 
     // 内积
     __device__ friend inline double operator*(node p1, node p2) {

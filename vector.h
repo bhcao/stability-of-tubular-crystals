@@ -52,7 +52,7 @@ namespace nano {
         inline void push_back(T in) { this->data[len++] = in;}
         inline T pop_back() { return this->data[--len];}
         inline T& operator[](int i) { return data[i]; }
-        inline int size() { return this->len; }
+        inline int& size() { return this->len; }
         
         // 交换两个
         void replace(T from, T to) {

@@ -20,38 +20,9 @@ model::model(para ppara_in): molecule(NUM, 3*NUM),
     for (int i=0; i<this->nodes.size(); i++) {
         this->nodes[i].id = i;
         this->adjacents[i].len = 0;
+        this->adjacents_id[i].len = 0;
     }
     generate_adjacent();
-    // 显存同步
-    #ifdef USE_CUDA
-    this->adjacents.gpu_synchro();
-    this->nodes.gpu_synchro();
-    this->adjacents_id.gpu_synchro();
-    #endif
-}
-
-// 找到所有原子与之相邻的点
-void model::generate_adjacent() {
-    for (int center = 0; center < this->nodes.size(); center++) {
-        nano::s_vector<node> padjacent = {0};
-        nano::s_vector<int> padjacent_id = {0};
-        for (int i = 0; i < this->bonds.size(); i++) {
-            // 如果键的一端是 center
-            if (this->bonds[i].a == center) {
-                node other = this->nodes[this->bonds[i].b];
-                // 将坐标添加到末尾
-                padjacent.push_back(other);
-                // 同时记录位置
-                padjacent_id.push_back(this->bonds[i].b);
-            } else if (this->bonds[i].b == center) {
-                node other = this->nodes[this->bonds[i].a];
-                padjacent.push_back(other);
-                padjacent_id.push_back(this->bonds[i].a);
-            }
-        }
-        this->adjacents.push_back(padjacent);
-        this->adjacents_id.push_back(padjacent_id);
-    }
 }
 
 // 生成点
