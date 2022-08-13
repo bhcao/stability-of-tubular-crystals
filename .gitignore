@@ -1,6 +1,6 @@
 # figure
 
-*.png
+energy*.png
 
 # binary
 
@@ -12,6 +12,7 @@
 # lammps
 
 *.dump
+*.data
 
 # vscode
 
@@ -20,3 +21,7 @@
 # build
 
 build
+
+# temp file
+
+__*__temp__*

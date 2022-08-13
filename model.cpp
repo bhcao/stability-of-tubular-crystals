@@ -145,28 +145,38 @@ void model::glide_climb() {
                 if (this->bonds[i].a == this->nodes.size()) {
                     this->bonds[i].a = flat(bn);
                 }
+                if (this->bonds[i].b == this->nodes.size()) {
+                    this->bonds[i].b = flat(bn);
+                }
             }
             bn = bn + go;
         }
 
     } else if (this->ppara.climb > 0) {
         // 增原子攀移
-        int last;
+        int theright = flat(bn + other);
+        // 不知为什么不能连写
+        pos2d temp = bn + other;
+        int theleft = flat(temp - go);
         for (int i=0; i<this->ppara.climb; i++) {
+            // 更新
             this->nodes.push_back(average(this->nodes[flat(bn)],
                 this->nodes[flat(bn-go)]));
-            last = this->nodes.size()-1;
-            this->bonds.push_back({last, flat(bn + other)});
-            // 不知为什么不能连写
-            pos2d temp = bn + other;
-            this->bonds.push_back({last, flat(temp - go)});
-            this->bonds.push_back({last, flat(bn - center)});
+            int thethis = this->nodes.size()-1;
+            this->bonds.push_back({thethis, theright});
+            this->bonds.push_back({thethis, theleft});
+            this->bonds.push_back({thethis, flat(bn - center)});
             this->bonds.replace({flat(bn), flat(bn - go)},
-                {last, flat(bn - go)});
+                {thethis, flat(bn - go)});
+            this->bonds.replace({flat(bn), theleft},
+                {thethis, flat(bn)});
             bn = bn - center;
+            // 下一次更新
+            theright = thethis;
+            theleft = flat(bn + other);
         }
         this->pdis_pair.end[0] = flat(bn);
-        this->pdis_pair.end[1] = last;
+        this->pdis_pair.end[1] = theright;
         return;
     }
     

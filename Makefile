@@ -5,29 +5,37 @@ CUDAENERGY = update.cu adjacent.cu
 LIB = nano.a
 LDFLAGS = -L/usr/lib/cuda/lib64 -lcudart
 
-gpu:
-	nvcc -D USE_CUDA $(MAIN) $(SOURCE) $(CUDAENERGY) -o main.out --expt-relaxed-constexpr
+NVCC = nvcc -D USE_CUDA --expt-relaxed-constexpr
+MPICXX = mpic++ -D USE_MPI
 
-cpu:
-	mv update.cu update.cpp
-	mv adjacent.cu adjacent.cpp
-	g++ $(MAIN) $(SOURCE) $(CPPENERGY) -o main.out -g2
-	mv adjacent.cpp adjacent.cu
-	mv update.cpp update.cu
+debug: update.cpp adjacent.cpp
+	$(CXX) $(MAIN) $(SOURCE) $(CPPENERGY) -o main.out -g2
+	gdb ./main.out
 
-cpu-mpi:
-	mv update.cu update.cpp
-	mv update.cu update.cpp
-	mpic++ -D USE_MPI $(MAIN) $(SOURCE) $(CPPENERGY) -o main.out
-	mv adjacent.cpp adjacent.cu
-	mv update.cpp update.cu
+gpu: adjacent.cu update.cu
+	$(NVCC) $(MAIN) $(SOURCE) $(CUDAENERGY) -o main.out 
 
-gpu-mpi:
-	nvcc -D USE_CUDA -lib $(SOURCE) $(CUDAENERGY) --expt-relaxed-constexpr -o $(LIB)
-	mpic++ -D USE_MPI $(MAIN) $(LIB) $(LDFLAGS) -o main.out
+cpu: update.cpp adjacent.cpp
+	$(CXX) $(MAIN) $(SOURCE) $(CPPENERGY) -o main.out
 
-clean:
-	rm $(LIB)
-	rm *.dump
+cpu-mpi: update.cpp adjacent.cpp
+	$(MPICXX) $(MAIN) $(SOURCE) $(CPPENERGY) -o main.out
+
+gpu-mpi: adjacent.cu update.cu
+	$(NVCC) -lib $(SOURCE) $(CUDAENERGY) -o $(LIB)
+	$(MPICXX) $(MAIN) $(LIB) $(LDFLAGS) -o main.out
+
+clean: adjacent.cu update.cu
+	rm -f *.dump *.data
 	rm -rf build
-	rm *.out *.a
+	rm -f *.out *.a
+	rm -f energy*.png
+	rm -f __*__temp__*
+
+adjacent.cu update.cu:
+	mv adjacent.cpp adjacent.cu
+	mv update.cpp update.cu
+
+adjacent.cpp update.cpp:
+	mv adjacent.cu adjacent.cpp
+	mv update.cu update.cpp

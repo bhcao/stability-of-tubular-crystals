@@ -54,8 +54,9 @@ public:
 
     // 由节点的二维坐标计算标识符
     inline int flat(int i, int j) {
+        int i2 = i;
         i %= this->ppara.n;
-        j += this->ppara.m * (i/this->ppara.n);
+        j += this->ppara.m * (i2/this->ppara.n);
         if (i < 0) {
             i += this->ppara.n;
             j -= this->ppara.m;
