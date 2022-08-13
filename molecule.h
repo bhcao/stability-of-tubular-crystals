@@ -75,6 +75,10 @@ typedef struct {
     int begin[2], end[2];
 } dis_pair;
 
+enum dump_type {
+    DATA_FILE, DUMP_FILE
+};
+
 // 集合了节点、键、相邻的类
 class molecule {
 public:
@@ -96,7 +100,7 @@ public:
     void disorganize();
     
     // 输出至文件
-    void dump(std::ofstream &file);
+    void dump(std::ofstream &file, enum dump_type dtype);
 };
 
 class figure {

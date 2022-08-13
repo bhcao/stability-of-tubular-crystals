@@ -30,7 +30,7 @@
 
 ### 主函数示例
 ```cpp
-para ppara = default_para; // 设置参数为模型默认参数
+para ppara = default_para; // 设置参数为模型默认参数[1]
 ppara.repeat = 10;         // 修改模型参数
 model this_model(ppara);   // 以 ppara 参数生成模型
 // 生成模型后再修改模型参数没用
@@ -40,9 +40,10 @@ double x, z;
 this_model.dis_pair_distance(&x, &z);
 std::cout << x << z;
 
-this_model.precision = 1e-7;     // 更改运行时参数
+this_model.precision = 1e-7;     // 更改运行时参数[2]
 this_model.disorganize();        // 退火
-std::ofstream fout("test.dump"); // dump 文件
+// dump 文件，第一个是文件名，第二个指定文件类型[3]
+std::ofstream fout("test.dump", DUMP_FILE);
 figure energy_change;            // 声明图片类
 
 for (int k=0; k<100; k++) {
@@ -58,6 +59,7 @@ fout.close();                   // 保存 dump 文件
 
 ### 模型参数
 模型构建参数（等号后面是参数默认值）：
+> 对应主函数注释 [1]
 
 | 参数                       | 解释          |
 | ---                        | ---         |
@@ -69,6 +71,7 @@ fout.close();                   // 保存 dump 文件
 |`double k = 1, tau = 3e-7`  | 能量参数（第一项键能、第二项曲率）|
 
 运行时参数：
+> 对应主函数注释 [2]
 
 | 参数                      | 解释          |
 | ---                      | ---         |
@@ -76,27 +79,35 @@ fout.close();                   // 保存 dump 文件
 |`double precision = 1e-6` | 求导精度（求导时增加的 $\Delta$ 值）
 |`double range = 1.0`      | 退火时粒子随机移动的高斯分布的方差 |
 
+文件类型：
+> 对应主函数注释 [3]
+
+| 类型                      | 解释          |
+| ---                      | ---         |
+|`DATA_FILE`               | .data 文件，包含键信息，但是同一个文件只能输出一次 |
+|`DUMP_FILE`               | .dump 文件，不包含键信息，同一个文件可以输出多次 |
+
 ### 并行测试
 1. 粒子数小于 1000 时，单线程或极少线程不建议开启 Cuda，反而拖慢速度；若开启 Cuda，线程数可以设置为电脑 CPU 核数的 2-3 倍；
 2. 粒子数大于 1000 小于 10000 时，Cuda 加速明显，可以开启；线程数可以超过 CPU 核数一些；
 3. 粒子数大于 10000 时，速度限制因素是 CPU，线程数应小于或等于 CPU 核数。
 
 ### 编译选项
-Windows 手动编译 CPU 版本时需将 update.cu 重命名为 update.cpp
+Windows 手动编译 CPU 版本时需将 update.cu、adjacent.cu 重命名为 update.cpp、adjacent.cpp
 
 1. `make gpu` 使用 Cuda 加速，需要安装 nvcc。手动编译命令如下
 ```
-nvcc -D USE_CUDA main.cpp energy.cpp model.cpp molecule.cpp update.cu -o main.out --expt-relaxed-constexpr
+nvcc -D USE_CUDA main.cpp energy.cpp model.cpp molecule.cpp update.cu adjacent.cu -o main.out --expt-relaxed-constexpr
 ```
 
 2. `make cpu` 不使用任何加速，默认编译器 g++，如有需要自行更换。手动编译命令如下
 ```
-g++ main.cpp energy.cpp model.cpp molecule.cpp update.cpp -o main.out
+g++ main.cpp energy.cpp model.cpp molecule.cpp update.cpp adjacent.cpp -o main.out
 ```
 
 3. `make gpu-mpi` 使用 Cuda 加速，同时使用 mpich 并行，需要安装 nvcc 和 mpich。手动编译命令如下（两步）
 ```
-nvcc -D USE_CUDA -lib energy.cpp model.cpp molecule.cpp update.cu --expt-relaxed-constexpr -o nano.a
+nvcc -D USE_CUDA -lib energy.cpp model.cpp molecule.cpp update.cu adjacent.cu --expt-relaxed-constexpr -o nano.a
 mpic++ -D USE_MPI main.cpp nano.a -L/usr/lib/cuda/lib64 -lcudart -o main.out
 ```
 
@@ -104,7 +115,7 @@ mpic++ -D USE_MPI main.cpp nano.a -L/usr/lib/cuda/lib64 -lcudart -o main.out
 
 4. `make cpu-mpi` 使用 mpich 并行，需要安装 mpich。手动编译命令如下
 ```
-mpic++ -D USE_MPI main.cpp energy.cpp model.cpp molecule.cpp update.cpp -o main.out
+mpic++ -D USE_MPI main.cpp energy.cpp model.cpp molecule.cpp update.cpp adjacent.cpp -o main.out
 ```
 
 ### 目标

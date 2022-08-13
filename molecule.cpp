@@ -42,31 +42,49 @@ void molecule::disorganize() {
 }
 
 // 输出
-void molecule::dump(std::ofstream &fout) {
-    fout << "ITEM: TIMESTEP\n" << this->time << "\nITEM: NUMBER OF ATOMS\n"
-        << this->nodes.size() << "\nITEM: BOX BOUNDS ss ss ss\n";
+void molecule::dump(std::ofstream &fout, enum dump_type dtype) {
     
     double boundary[6] = {0, 1, 0, 1, 0, 1};
-    for (int i=0; i<6; i++) {
-        if (i%2==0) {
-            fout << boundary[i] << ' ';
-        } else {
-            fout << boundary[i] << '\n';
-        }
+    
+    // 文件头
+    if (dtype == DUMP_FILE) {
+        fout << "ITEM: TIMESTEP\n" << this->time << "\nITEM: NUMBER OF ATOMS\n"
+        << this->nodes.size() << "\nITEM: BOX BOUNDS ss ss ss\n" // 边界
+        << boundary[0] << " " << boundary[1] << "\n"
+        << boundary[2] << " " << boundary[3] << "\n"
+        << boundary[4] << " " << boundary[5] << "\n"
+        << "ITEM: ATOMS id type xs ys zs\n";
+    } else if (dtype == DATA_FILE) {
+        fout << "# Model for nanotube. AUTO generated, DO NOT EDIT\n\n"
+        << this->nodes.size() << "\tatoms\n" // 内容
+        << this->bonds.size() << "\tbonds\n\n"
+        << "2\tatom types\n1\tbond types\n\n"
+        << boundary[0] << "\t" << boundary[1] << "\txlo xhi\n" // 边界
+        << boundary[2] << "\t" << boundary[3] << "\tylo yhi\n"
+        << boundary[4] << "\t" << boundary[5] << "\tzlo zhi\n\n"
+        << "Masses\n\n" << "1\t0.01\n2\t0.01\n"
+        << "\nAtoms\n\n";
     }
     
-    fout << "ITEM: ATOMS id type xs ys zs\n";
     for (int i=0; i<this->nodes.size(); i++) {
         if (i == this->pdis_pair.begin[0] || i == this->pdis_pair.begin[1] ||
             i == this->pdis_pair.end[0] || i == this->pdis_pair.end[1]) {
-            fout << i << "\t2\t" << this->nodes[i].i << ' ' << this->nodes[i].j
-                << ' ' << this->nodes[i].k << '\n';
+            fout << i << "\t2\t" << this->nodes[i].i << '\t' << this->nodes[i].j
+                << '\t' << this->nodes[i].k << '\n';
         } else {
-            fout << i << "\t1\t" << this->nodes[i].i << ' ' << this->nodes[i].j
-                << ' ' << this->nodes[i].k << '\n';
+            fout << i << "\t1\t" << this->nodes[i].i << '\t' << this->nodes[i].j
+                << '\t' << this->nodes[i].k << '\n';
         }
-        
     }
+
+    // 原子间的键
+    if (dtype == DATA_FILE) {
+        fout << "\nBonds\n\n";
+        for (int i=0; i<this->bonds.size(); i++) {
+            fout << i << "\t1\t" << this->bonds[i].a << '\t' << this->bonds[i].b << '\n';
+        }
+    }
+    return;
 }
 
 void figure::draw(const char* name){
