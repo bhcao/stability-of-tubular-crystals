@@ -35,7 +35,7 @@ namespace nano {
         inline vector(int size): len(0) {
             this->data = new T[size];
             #ifdef USE_CUDA
-            this->gpu_data = NULL;
+            cudaMalloc((void**)&this->gpu_data, size*sizeof(T));
             #endif
         }
 
@@ -77,9 +77,6 @@ namespace nano {
         #ifdef USE_CUDA
         // 拷贝至显存
         inline void gpu_synchro() {
-            if (this->gpu_data == NULL) {
-                cudaMalloc((void**)&this->gpu_data, this->len*sizeof(T));
-            }
             cudaMemcpy(this->gpu_data, this->data, this->len*sizeof(T),
                 cudaMemcpyHostToDevice);
         }

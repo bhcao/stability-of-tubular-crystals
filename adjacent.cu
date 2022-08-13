@@ -69,13 +69,14 @@ __global__ void cudaGenerate_adjacent(node *pnode, bond *bonds, int bonds_len,
 // 找到所有原子与之相邻的点
 #ifdef USE_CUDA
 void model::generate_adjacent() {
+    this->nodes.gpu_synchro();
+    this->bonds.gpu_synchro();
+
     node *nodes = this->nodes.get_gpu_data();
     bond *bonds = this->bonds.get_gpu_data();
     nano::s_vector<node> *adjacents = this->adjacents.get_gpu_data();
     nano::s_vector<int> *adjacents_id = this->adjacents_id.get_gpu_data();
 
-    this->nodes.gpu_synchro();
-    this->adjacents_id.gpu_synchro();
     this->adjacents.size() = this->adjacents_id.size() = this->nodes.size();
 
     cudaGenerate_adjacent<<<this->nodes.size(), 1>>>(nodes, bonds,

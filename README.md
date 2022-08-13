@@ -1,20 +1,21 @@
 # nanotube
 
 ### 介绍
-利用梯度下降法模拟三角形纳米管在位错下的稳定形状，复刻以下论文
-
-[Shape multistability in ﬂexible tubular crystals through interactions of mobile dislocations](https://www.pnas.org/doi/pdf/10.1073/pnas.2115423119)
-> Zakharov A, Beller D A. Shape multistability in flexible tubular crystals through interactions of mobile dislocations[J]. Proceedings of the National Academy of Sciences, 2022, 119(6): e2115423119.
+利用梯度下降法模拟三角形纳米管在位错下的稳定形状，复刻论文《可弯曲管状晶体在移动的位错的相互作用下的形状多稳定性》（Shape multistability in ﬂexible tubular crystals through interactions of mobile dislocations） [^论文引用]
 
 ![模型直观图](https://gitee.com/Bovera/nanotube/raw/master/model.png)  
 图 1. 模型直观图
 
 ### 模型表示
 
-如图 2，边长为 $m$，$n$ 的平行四边形沿 $A$、$B$ 点重合后，将数轴下方平移拼接至上方，即构成了叶序数为 $(m,n)$ 的圆柱。其半径、角度等参数很容易得出。
+如图 2，边长为 $m$，$n$ 的平行四边形沿 $A$、$B$ 点重合后，将数轴下方平移拼接至上方，即构成了叶序数为 $(m,n)$ 的圆柱。其半径、角度等参数很容易得出，如（其他详见论文）
+
+$$R=\frac{|AB|}{2\pi}=\frac{a\sqrt{m^2+n^2-mn}}{2\pi}.$$
 
 ![模型示意](https://gitee.com/Bovera/nanotube/raw/master/tube.png)  
 图 2. 模型示意
+
+当然，为了获得更长的管子，我们通过上图所示基本单元沿 $m$ 方向的平移延长管子。
 
 ### 位错表示
 
@@ -42,13 +43,13 @@ std::cout << x << z;
 
 this_model.precision = 1e-7;     // 更改运行时参数[2]
 this_model.disorganize();        // 退火
-// dump 文件，第一个是文件名，第二个指定文件类型[3]
-std::ofstream fout("test.dump", DUMP_FILE);
+std::ofstream fout("test.dump"); // dump 文件
 figure energy_change;            // 声明图片类
 
 for (int k=0; k<100; k++) {
     this_model.update();         // 模型计算更新
-    this_model.dump(fout);       // 输出当前模型至 dump 文件
+    // 输出当前模型至 dump 文件，第二个参数指定文件类型[3]
+    this_model.dump(fout, DUMP_FILE);       
     // 计算总能量并增加至图片
     energy_change << this_model.total_energy();
 }
@@ -58,8 +59,8 @@ fout.close();                   // 保存 dump 文件
 ```
 
 ### 模型参数
-模型构建参数（等号后面是参数默认值）：
-> 对应主函数注释 [1]
+模型构建参数：
+> **说明：** 对应主函数示例注释 [1]，等号后面是参数默认值（下同）
 
 | 参数                       | 解释          |
 | ---                        | ---         |
@@ -71,7 +72,7 @@ fout.close();                   // 保存 dump 文件
 |`double k = 1, tau = 3e-7`  | 能量参数（第一项键能、第二项曲率）|
 
 运行时参数：
-> 对应主函数注释 [2]
+> **说明：** 对应主函数示例注释 [2]
 
 | 参数                      | 解释          |
 | ---                      | ---         |
@@ -80,11 +81,11 @@ fout.close();                   // 保存 dump 文件
 |`double range = 1.0`      | 退火时粒子随机移动的高斯分布的方差 |
 
 文件类型：
-> 对应主函数注释 [3]
+> **说明：** 对应主函数示例注释 [3]，与 LAMMPS 文件类型一致。对文件的详细描述见 [LAMMPS 官网](https://www.lammps.org/)，可视化读取文件可使用 [Ovito](https://www.ovito.org/)。我们对位错原子采取了特别标记，在 Ovito 中会展示不同颜色。
 
 | 类型                      | 解释          |
 | ---                      | ---         |
-|`DATA_FILE`               | .data 文件，包含键信息，但是同一个文件只能输出一次 |
+|`DATA_FILE`               | .data 文件，包含键信息，同一个文件只能输出一次 |
 |`DUMP_FILE`               | .dump 文件，不包含键信息，同一个文件可以输出多次 |
 
 ### 并行测试
@@ -92,8 +93,10 @@ fout.close();                   // 保存 dump 文件
 2. 粒子数大于 1000 小于 10000 时，Cuda 加速明显，可以开启；线程数可以超过 CPU 核数一些；
 3. 粒子数大于 10000 时，速度限制因素是 CPU，线程数应小于或等于 CPU 核数。
 
+> **提醒：** CUDA 函数执行错误会以数字代码的形式返回，在不进行错误处理时会自动忽略，不会报错（错误处理暂时还未完成）；因而请仔细检查显卡驱动是否为 Nvidia 驱动等，避免无法调用却不报错。
+
 ### 编译选项
-Windows 手动编译 CPU 版本时需将 update.cu、adjacent.cu 重命名为 update.cpp、adjacent.cpp
+> **提醒：** Windows 手动编译 CPU 版本时需将 update.cu、adjacent.cu 重命名为 update.cpp、adjacent.cpp
 
 1. `make gpu` 使用 Cuda 加速，需要安装 nvcc。手动编译命令如下
 ```
@@ -111,14 +114,20 @@ nvcc -D USE_CUDA -lib energy.cpp model.cpp molecule.cpp update.cu adjacent.cu --
 mpic++ -D USE_MPI main.cpp nano.a -L/usr/lib/cuda/lib64 -lcudart -o main.out
 ```
 
-**注意第二步链接时 -L 后路径替换为为 Cuda 运行时 cudart.dll / libcudart.so 的路径。**
+> **提醒：** 第二步链接时 -L 后路径替换为为 Cuda 运行时 cudart.dll / libcudart.so 的路径。
 
 4. `make cpu-mpi` 使用 mpich 并行，需要安装 mpich。手动编译命令如下
 ```
 mpic++ -D USE_MPI main.cpp energy.cpp model.cpp molecule.cpp update.cpp adjacent.cpp -o main.out
 ```
 
+5. 其他选项有 `make clean` 清理所有编译出来的文件；以及 `make debug`（默认值）用默认 C++ 编译器编译后在 gdb 中打开调试。
+
 ### 目标
 1. 优化相关算法，充分利用显卡，提高运行速度，减少不必要的内存拷贝；
 2. 重构代码，使得格式更加清新，模块化更加突出；
-3. 测试参数，修改 bug。
+3. 测试参数，修改 bug，完成对论文的复刻；
+4. 尝试利用计算机代数系统（Python 的 sympy 等）进行梯度计算，以提高速度同时保证准确性；
+5. 完成自己的项目，进行拓展，考虑四方格子的情况等。
+
+[^论文引用]: Zakharov A, Beller D A. [Shape multistability in flexible tubular crystals through interactions of mobile dislocations](https://www.pnas.org/doi/pdf/10.1073/pnas.2115423119)[J]. Proceedings of the National Academy of Sciences, 2022, 119(6): e2115423119.
