@@ -63,8 +63,26 @@ __device__ double energy(node center, nano::s_vector<node> others, double k, dou
     return count;
 }
 
-#define OTHER_PARA others[a], ppara.k, ppara.rest_len, ppara.tau
-__global__ void cudaUpdate(node *center, nano::s_vector<node> *others, nano::s_vector<int> *cuda_others_id, 
+// 所有力总和
+#define OTHER_PARA others, ppara.k, ppara.rest_len, ppara.tau
+__device__ node accelerate(node center, node speed, nano::s_vector<node> others, para ppara, double precision) {
+    node temp = center;
+    temp.i += precision;
+    double i = (energy(temp, OTHER_PARA) - energy(center, OTHER_PARA)) / precision;
+
+    temp = center;
+    temp.j += precision;
+    double j = (energy(temp, OTHER_PARA) - energy(center, OTHER_PARA)) / precision;
+
+    temp = center;
+    temp.k += precision;
+    double k = (energy(temp, OTHER_PARA) - energy(center, OTHER_PARA)) / precision;
+    
+    node f_c = {i, j, k};
+    return (-1)*f_c/ppara.mass - ppara.damp*speed + std::sqrt(2*ppara.damp*ppara.tempr*K_B/ppara.mass)*randnode();
+}
+
+__global__ void cudaUpdate(node *center, node *speed, nano::s_vector<node> *others, nano::s_vector<int> *cuda_others_id, 
         para ppara, double step, double precision) {
     // CUDA 线程编号
     #ifdef USE_CUDA
@@ -73,21 +91,8 @@ __global__ void cudaUpdate(node *center, nano::s_vector<node> *others, nano::s_v
     int a = 0;
     #endif
 
-    node temp = center[a];
-    temp.i += precision;
-    // 偏导数乘以步长
-    double i = step * (energy(temp, OTHER_PARA) - energy(center[a], OTHER_PARA)) / precision;
-    if (i>step) i=step;
-    temp = center[a];
-    temp.j += precision;
-    double j = step * (energy(temp, OTHER_PARA) - energy(center[a], OTHER_PARA)) / precision;
-    if (j>step) j=step;
-    temp = center[a];
-    temp.k += precision;
-    double k = step * (energy(temp, OTHER_PARA) - energy(center[a], OTHER_PARA)) / precision;
-    if (j>step) j=step;
-    node div = {i, j, k};
-    center[a] = center[a] - div;
+    speed[a] = speed[a] + accelerate(center[a], speed[a], others[a], ppara, precision)*step;
+    center[a] = center[a] + speed[a]*step;
     
     #ifdef USE_CUDA
     // 更新邻域，准备下一次计算，CPU 上分立以保证正确性
@@ -100,12 +105,14 @@ __global__ void cudaUpdate(node *center, nano::s_vector<node> *others, nano::s_v
 #ifdef USE_CUDA
 void model::update() {
     node *cuda_nodes = this->nodes.get_gpu_data();
+    node *cuda_speeds = this->speeds.get_gpu_data();
     nano::s_vector<node> *cuda_others = this->adjacents.get_gpu_data();
     nano::s_vector<int> *cuda_others_id = this->adjacents_id.get_gpu_data();
     
-    cudaUpdate<<<this->nodes.size(), 1>>>(cuda_nodes, cuda_others, cuda_others_id, this->ppara, 
+    cudaUpdate<<<this->nodes.size(), 1>>>(cuda_nodes, cuda_speeds, cuda_others, cuda_others_id, this->ppara, 
         this->step, this->precision);
-
+    
+    this->speeds.cpu_synchro();
     this->nodes.cpu_synchro();
     this->adjacents.cpu_synchro();
 }
@@ -114,7 +121,7 @@ void model::update() {
 #ifndef USE_CUDA
 void model::update() {
     for (int a=0; a<this->nodes.size(); a++) {
-        cudaUpdate(&this->nodes[a], &this->adjacents[a], &this->adjacents_id[a],
+        cudaUpdate(&this->nodes[a], &this->speeds[a], &this->adjacents[a], &this->adjacents_id[a],
             this->ppara, this->step, this->precision);
     }
     for (int a=0; a<this->nodes.size(); a++) {

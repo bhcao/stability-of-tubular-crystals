@@ -27,17 +27,22 @@ double gaussrand() {
     return X;
 }
 
+node randnode() {
+    std::srand(std::time(0));
+    double r = gaussrand();
+    double phi = 2*PI * (double)rand() / RAND_MAX;
+    double theta = PI/2 * ((double)rand() / RAND_MAX - 0.5);
+    node temp = {std::cos(phi)*std::sin(theta), std::sin(phi)*std::sin(theta),
+            std::cos(theta)};
+    return r*temp;
+}
+
 // 随机函数随距离成高斯分布
 void molecule::disorganize() {
-    std::srand(std::time(0));
+    
     for (int i=0; i<this->nodes.size(); i++) {
         // 随机偏差
-        double r = gaussrand();
-        double phi = 2*PI * (double)rand() / RAND_MAX;
-        double theta = PI/2 * ((double)rand() / RAND_MAX - 0.5);
-        node rand_deviation = {std::cos(phi)*std::sin(theta), std::sin(phi)*std::sin(theta),
-            std::cos(theta)};
-        this->nodes[i] = this->nodes[i] + this->range*r*rand_deviation;
+        this->nodes[i] = this->nodes[i] + this->range*randnode();
     }
 }
 

@@ -71,6 +71,8 @@ public:
     int a, b;
 };
 
+node randnode();
+
 typedef struct {
     int begin[2], end[2];
 } dis_pair;
@@ -84,9 +86,10 @@ class molecule {
 public:
     // 初始化生成 nodes、bonds、adjacents
     inline molecule(int nodes_len, int bonds_len): time(0), step(2e-5),
-        precision(1e-6), range(1.0), nodes(nodes_len), bonds(bonds_len) {}
+        precision(1e-6), range(1.0), nodes(nodes_len), bonds(bonds_len), speeds(nodes_len) {}
 
     nano::vector<node> nodes;
+    nano::vector<node> speeds;
     nano::vector<bond> bonds;
     
     dis_pair pdis_pair;

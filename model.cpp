@@ -17,8 +17,10 @@ model::model(para ppara_in): molecule(NUM, 3*NUM),
     generate_bonds();
     glide_climb();
     // 与显存结构共用，无法初始化，只能手动初始化
+    double v = std::sqrt(3*K_B*this->ppara.tempr*this->ppara.mass);
     for (int i=0; i<this->nodes.size(); i++) {
         this->nodes[i].id = i;
+        this->speeds.push_back(v*randnode());
         this->adjacents[i].len = 0;
         this->adjacents_id[i].len = 0;
     }
