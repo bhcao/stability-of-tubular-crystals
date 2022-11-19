@@ -1,10 +1,11 @@
 #include <cmath>
+#include <cassert>
 
-#include "vector.h"
+#include "nmath.h"
 #include "molecule.h"
 #include "model.h"
 
-__device__ void rearrange(nano::s_vector<int> *padjacent_id, node *nodes, node *pnode) {
+void rearrange(nano::s_vector<int> *padjacent_id, node *nodes, node *pnode) {
     node plane_vec = cross(nodes[(*padjacent_id)[0]]-*pnode, nodes[(*padjacent_id)[1]]-*pnode);
     plane_vec = plane_vec / dist(plane_vec);
     
@@ -37,7 +38,7 @@ __device__ void rearrange(nano::s_vector<int> *padjacent_id, node *nodes, node *
     }
 }
 
-__global__ void cudaGenerate_adjacent(node *pnode, bond *bonds, int bonds_len,
+void cudaGenerate_adjacent(node *pnode, bond *bonds, int bonds_len,
         nano::s_vector<node> *padjacent, nano::s_vector<int> *padjacent_id, node *nodes) {
 #ifdef USE_CUDA
     int a = blockIdx.x;
@@ -67,27 +68,6 @@ __global__ void cudaGenerate_adjacent(node *pnode, bond *bonds, int bonds_len,
 }
 
 // 找到所有原子与之相邻的点
-#ifdef USE_CUDA
-void model::generate_adjacent() {
-    this->nodes.gpu_synchro();
-    this->bonds.gpu_synchro();
-
-    node *nodes = this->nodes.get_gpu_data();
-    bond *bonds = this->bonds.get_gpu_data();
-    nano::s_vector<node> *adjacents = this->adjacents.get_gpu_data();
-    nano::s_vector<int> *adjacents_id = this->adjacents_id.get_gpu_data();
-
-    this->adjacents.size() = this->adjacents_id.size() = this->nodes.size();
-
-    cudaGenerate_adjacent<<<this->nodes.size(), 1>>>(nodes, bonds,
-        this->bonds.size(), adjacents, adjacents_id, nodes);
-
-    this->adjacents.cpu_synchro();
-    this->adjacents_id.cpu_synchro();
-}
-#endif
-
-#ifndef USE_CUDA
 void model::generate_adjacent() {
     this->adjacents.size() = this->adjacents_id.size() = this->nodes.size();
 
@@ -96,4 +76,3 @@ void model::generate_adjacent() {
             &this->adjacents[a], &this->adjacents_id[a], &this->nodes[0]);
     }
 }
-#endif

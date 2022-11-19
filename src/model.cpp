@@ -1,8 +1,7 @@
 #include <cmath>
 
-#include "vector.h"
-#include "molecule.h"
 #include "model.h"
+#include "nmath.h"
 
 inline int relu(int i) {
     if (i<0) return 0;
@@ -11,7 +10,8 @@ inline int relu(int i) {
 
 // 保证增原子攀移时不会越界，同时防止减原子攀移初始时越界
 #define NUM ppara_in.m*ppara_in.n*ppara_in.repeat + relu(ppara_in.climb)
-model::model(para ppara_in): molecule(NUM, 3*NUM),
+model::model(para ppara_in): time(0), step(2e-5),
+        precision(1e-6), range(1.0), nodes(NUM), bonds(3*NUM), speeds(NUM),
         ppara(ppara_in), adjacents(NUM), adjacents_id(NUM) {
     generate_nodes();
     generate_bonds();

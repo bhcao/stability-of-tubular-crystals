@@ -15,15 +15,15 @@ void thread(int glide, int n) {
     // 修改模型参数，比如 m,n
     ppara.n = n;
     ppara.repeat = 4;
-    ppara.glide = glide;
+    ppara.glide = -glide;
     ppara.tau = 1e-5;
     // 以 ppara 参数生成模型
     // 模型已经生成，之后再修改模型参数也没用
     model this_model(ppara);
     
     // 更改运行时参数
-    this_model.precision = 1e-5;
-    this_model.step = 1e-3;
+    this_model.precision = 1e-9;
+    this_model.step = 1e-7;
     
     double x, z;
     this_model.dis_pair_distance(&x, &z);
@@ -45,10 +45,10 @@ void thread(int glide, int n) {
     
     // 声明图片类
     figure energy_change;
-    for (int k=0; k<100; k++) {
+    for (int k=0; k<10000; k++) {
         // 模型计算更新
         this_model.update();
-        if (k%10==0) {
+        if (k%100==0) {
             // 输出当前模型至 dump 文件
             this_model.dump(fout, DUMP_FILE);
             // 计算总能量并增加至图片
