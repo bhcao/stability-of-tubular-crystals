@@ -16,18 +16,7 @@
 #include "molecule.h"
 
 // 参数默认值
-#define default_para {13,13,0.1,1,3,3,3,1,3e-7,1,1,273}
-
-class pos2d {
-    friend pos2d operator+(pos2d &p1, pos2d &p2) {
-        return {p1.i+p2.i, p1.j+p2.j};
-    }
-    friend pos2d operator-(pos2d &p1, pos2d &p2) {
-        return {p1.i-p2.i, p1.j-p2.j};
-    }
-public:
-    int i, j;
-};
+#define default_para {13,13,1,3,3,3,0.1,1,3e-7,1e-6,1,1,273}
 
 // 参数
 typedef struct {
@@ -37,29 +26,35 @@ typedef struct {
     int glide, climb;
     int repeat;
 
-    // 能量参数（键原长、系数）
+    // 能量参数（键原长、系数）（energy.cpp 用的）
     double rest_len, k, tau;
-
-    // 
-
+    
+    // 运行参数（molecule 用的）
+    double step; // 更新的步长（precision 一般不要调，要调用 set 函数）
+    double mass, damp, tempr; // 粒子质量、朗之万阻尼系数、系统的温度
 } para;
-
-inline nano::vector average(nano::vector p1, nano::vector p2) {
-    return (p1 + p2)/2;
-}
-
-typedef struct {
-    int begin[2], end[2];
-} dis_pair;
 
 // 集合了节点、键、相邻的类
 class model: public molecule {
 public:
     // 初始化生成 nodes、bonds、adjacents
     model(para ppara);
+    
+    // 位错对间距
+    inline nano::pair<double> dis_pair_distance() {
+        nano::vector temp = (this->nodes[this->begin[0]] + this->nodes[this->begin[1]] -
+            this->nodes[this->end[0]] - this->nodes[this->end[1]]) / 2;
+        double m = (double)this->ppara.m, n = (double)this->ppara.n;
+        double r = this->ppara.rest_len * 1/PI/2 * std::sqrt(m*m+n*n-m*n);
+        double half_dist = std::sqrt(temp[0]*temp[0]+temp[1]*temp[1])/2;
+        return nano::pair<double>(r * std::asin(half_dist/r), temp[2]);
+    }
 
 private:
-    dis_pair pdis_pair;
+    // 位错对
+    int begin[2], end[2];
+
+    para ppara; // 参数，重复很多，仅仅是为了方便使用
 
     // 由节点的二维坐标计算标识符
     inline int flat(int i, int j) {
@@ -76,32 +71,19 @@ private:
         }
         return i + this->ppara.n*j;
     }
-    inline int flat(pos2d i) { return flat(i.i, i.j); }
+    inline int flat(nano::pair<int> i) { return flat(i[0], i[1]); }
     inline int flat(int i[2]) { return flat(i[0], i[1]); }
 
-    // f* nvidia... Cuda 函数没法用
-    inline void dis_pair_distance(double *x, double *z) {
-        nano::vector begin = average(this->nodes[this->pdis_pair.begin[0]],
-            this->nodes[this->pdis_pair.begin[1]]);
-        nano::vector end = average(this->nodes[this->pdis_pair.end[0]],
-            this->nodes[this->pdis_pair.end[1]]);
-        nano::vector temp = begin - end;
-        double m = (double)this->ppara.m;
-        double n = (double)this->ppara.n;
-        double r = this->ppara.rest_len * 1/PI/2 * std::sqrt(m*m+n*n-m*n);
-        double half_dist = std::sqrt(temp[0]*temp[0]+temp[1]*temp[1])/2;
-        *x = r * std::asin(half_dist/r);
-        *z = temp[2];
-    }
-
-    // 生成所有原子与之相邻的点
-    void generate_adjacent();
-    // 生成点
-    void generate_nodes();
-    // 生成键
-    void generate_bonds();
-    // 滑移和攀移
-    void glide_climb();
+    // 生成点位置
+    void perfect_model_position();
+    // 键、邻接（拓扑结构）
+    void perfect_model_topology();
+    // 滑移和攀移（根据拓扑结构）
+    void add_dislocation();
 };
+
+// 两类能量函数（在 energy.cpp 中）paras 顺序为 rest_len, k, tau
+double my_bond_energy(nano::vector p1, nano::vector p2, nano::sarray<double> paras);
+double my_node_energy(nano::vector center, nano::sarray<nano::vector> others, nano::sarray<double> paras);
 
 #endif // NANO_MODEL_H_

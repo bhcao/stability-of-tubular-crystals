@@ -1,14 +1,15 @@
 #include <cmath>
-#include <iostream>
 
 #include "model.h"
 #include "nmath.h"
 
-double my_bond_energy(nano::vector p1, nano::vector p2, double k, double rest_len) {
+double my_bond_energy(nano::vector p1, nano::vector p2, nano::sarray<double> paras) {
+    double rest_len = paras[0], k = paras[1];
     return k/2 * (nano::mod(p1-p2) - rest_len) * (nano::mod(p1-p2) - rest_len);
 }
 
-double my_node_energy(nano::vector center, nano::sarray<nano::vector> others, double tau) {
+double my_node_energy(nano::vector center, nano::sarray<nano::vector> others, nano::sarray<double> paras) {
+    double tau = paras[2];
     // 一个点周围所有角，避免重复计算
     nano::sarray<double> angle;
     for (int i=0; i<others.size()-1; i++) {

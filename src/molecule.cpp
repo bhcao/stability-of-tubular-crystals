@@ -14,9 +14,9 @@ double molecule::local_energy(nano::vector center, nano::sarray<int> others) {
 
     double count = 0;
     for (int i=0; i<others.size(); i++) {
-        count += this->bond_energy(center, adjacent[i])/2;
+        count += this->bond_energy(center, adjacent[i], this->paras)/2;
     }
-    count += this->node_energy(center, adjacent);
+    count += this->node_energy(center, adjacent, this->paras);
     return count;
 }
 
@@ -38,9 +38,9 @@ double molecule::local_energy_for_update(nano::vector center, nano::sarray<int> 
 
     double count = 0;
     for (int i=0; i<others.size(); i++) {
-        count += this->bond_energy(center, adjacent[i]);
+        count += this->bond_energy(center, adjacent[i], this->paras);
     }
-    count += this->node_energy(center, adjacent);
+    count += this->node_energy(center, adjacent, this->paras);
     return count;
 }
 

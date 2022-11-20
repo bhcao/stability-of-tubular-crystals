@@ -35,6 +35,12 @@ const dump_t P_ENERGY   = 1 << 6; // 输出局部势能
 // 集合了节点、键、相邻的类，必须子类包装
 class molecule {
 public:
+    // 初始化，求导精度有需要自行用 set_precision 调整，其他参数输入。bond_div_node_n 键数比原子数
+    inline molecule(double step, double mass, double damp, double tempr, int node_n,
+        int bond_div_node_n): time(0), step(step), precision(1e-10), mass(mass), 
+        damp(damp), tempr(tempr), nodes(node_n), velocities(node_n), adjacents(node_n), 
+        bonds(bond_div_node_n * node_n) {}
+
     double total_energy();  // 系统整体的能量
     void update();          // 更新函数
 
@@ -61,13 +67,14 @@ protected:
     nano::darray<nano::sarray<int>> adjacents;
 
     // 键，只在 dump 中有用，计算时无用
-    nano::darray<nano::pair> bonds;
-    nano::darray<int> emphasis; // 强调的粒子，输出时会用不同 type
+    nano::darray<nano::pair<int>> bonds;
+    nano::sarray<int> emphasis; // 强调的粒子，输出时会用不同 type
 
     // 函数指针，以粒子为中心的能量，其余顺序已排好
-    double (*node_energy)(nano::vector center, nano::sarray<nano::vector> others);
+    double (*node_energy)(nano::vector center, nano::sarray<nano::vector> others, nano::sarray<double> paras);
     // 函数指针，以键为中心的能量
-    double (*bond_energy)(nano::vector a, nano::vector b);
+    double (*bond_energy)(nano::vector a, nano::vector b, nano::sarray<double> paras);
+    nano::sarray<double> paras; // 能量参数，会传递至 node_energy、bond_energy 函数
 
 private:
     // 运行参数
