@@ -118,6 +118,13 @@ public:
     // 增加长度，仅仅为了方便 adjacent 使用
     inline void set_size(int i) { this->len = i; }
 
+    int find(T from) { // 返回 from 所在位置
+        for (int i = 0; i < this->len; i++)
+            if (this->data[i] == from)
+                return i;
+        return -1;
+    }
+
 protected:
     T* data;
     int len;
@@ -135,6 +142,26 @@ public:
     }
     inline int cap() { return SARRAY_SIZE; }
 
+    // 在点 n 插入，顺序保留
+    void insert(T from, int n) {
+        for (int i=this->len-1; i>n; i--)
+            this->s_data[i] = this->s_data[i-1];
+        this->s_data[n] = from;
+        this->len++;
+    }
+
+    // 移除 from，顺序保留
+    bool getrid(T from) {
+        for (int i=0; i<this->len; i++)
+        if (this->data[i] == from) {
+            for (int j=i; j<this->len-1; j++)
+                this->s_data[j] = this->s_data[j+1];
+            this->len--;
+            return true;
+        }
+        return false;
+    }
+
 private:
     T s_data[SARRAY_SIZE];
 };
@@ -148,7 +175,7 @@ public:
     inline ~darray() { delete []this->data; }
     inline int cap() { return this->capacity; }
 
-    // 交换两个，from -> to
+    // 交换两个，from -> to（顺序不保存）
     bool replace(T from, T to) {
         for (int i=0; i<this->len; i++)
         if (this->data[i] == from) {
@@ -158,7 +185,7 @@ public:
         return false;
     }
 
-    // 移除 from，成功返回 true，否则 false
+    // 移除 from，成功返回 true，否则 false（顺序不保存）
     bool remove(T from) {
         for (int i=0; i<this->len; i++)
         if (this->data[i] == from) {

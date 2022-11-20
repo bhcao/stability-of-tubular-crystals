@@ -19,7 +19,26 @@ model::model(para p): molecule(p.step, p.mass, p.damp, p.tempr,
     perfect_model_position();
     this->adjacents.set_size(this->nodes.size()); // 邻接增加
     perfect_model_topology();
+    
+    // 初始化位错，设置检查点等
+    this->begin[1] = this->end[0] = flat(0, (p.repeat + 1) * p.m / 2);
+    nano::sarray<int>& center = this->adjacents[this->end[0]];
+    if (p.direction > 0)
+        this->begin[0] = this->end[1] = center[std::abs(p.direction)];
+    if (p.direction < 0)
+        this->begin[0] = this->end[1] = 
+            center[p.direction == -1 ? 5 : (std::abs(p.direction) - 2)];
+    this->checkpoint = dual(center[std::abs(p.direction) - 1], this->end[0], this->end[1]);
+
     add_dislocation();
+    
+    // 如果发生了位错，加入强调的粒子中
+    if (this->begin[0] != this->end[1]) {
+        this->emphasis.push_back(this->begin[0]);
+        this->emphasis.push_back(this->begin[1]);
+        this->emphasis.push_back(this->end[0]);
+        this->emphasis.push_back(this->end[1]);
+    }
 
     // 随机初始速度（平均速度与温度有关）
     double v = std::sqrt(3*K_B*this->ppara.tempr*this->ppara.mass);
@@ -73,7 +92,7 @@ void model::perfect_model_topology() {
         if (std::abs(this->nodes[flat(i, j)][2] - this->nodes[a][2]) < 2*this->ppara.rest_len) \
             this->adjacents[flat(i, j)].push_back(a);
     
-    // 键只三个方向生成，因为剩余三个方向已经生成了；邻接留个方向均生成
+    // 键只三个方向生成，因为剩余三个方向已经生成了；邻接六个方向均生成
     for (int i = 0; i < this->ppara.n; i++) 
     for (int j = 0; j < this->ppara.repeat*this->ppara.m; j++) {
         NEAR_THEN_PUSH_ALL(flat(i+1, j))
@@ -85,40 +104,35 @@ void model::perfect_model_topology() {
     }
 }
 
-void model::add_dislocation() {
-    // 初始原子 j 位置 begin number，pos2d
-    nano::pair<int> bn = {0, (this->ppara.repeat + 1) * this->ppara.m / 2};
-    this->begin[1] = flat(bn);
+// 移除粒子及其相连键
+void model::remove(int node) {
+    this->nodes[node] = this->nodes[this->nodes.size()-1];
+    this->nodes.pop_back();
+    // 移除相邻键
+    for (int i = 0; i<this->adjacents[node].size(); i++)
+        this->remove(nano::pair<int>(node, this->adjacents[node][i]));
+    this->adjacents[node] = this->adjacents[this->nodes.size()-1];
+    this->adjacents.pop_back();
+}
 
-    nano::pair<int> left, right, center;
-    switch (this->ppara.direction) {
-    case 0:
-        left = {0,-1}; right = {1,0};
-        break;
-    case 1:
-        left = {1,-1}; right = {0,1};
-        break;
-    case 2:
-        left = {1,0}; right = {-1,1};
-    }
-    
-    center = left + right;
-    nano::pair<int> go = this->ppara.glide > 0 ? left: right;
-    nano::pair<int> other = this->ppara.glide < 0 ? left: right;
-    this->begin[0] = flat(bn + other);
-    
+void model::add_dislocation() {    
     // 滑移
-    if (this->ppara.glide != 0) {
-        nano::pair<int> from, to; // 键
-        for (int i=0; i < std::abs(this->ppara.glide); i++) {
-            from = {flat(bn), flat(bn + center)};
-            to = {flat(bn + left), flat(bn + right)};
-            this->bonds.replace(from, to);
-            bn = bn + go;
-        }
+    for (int i=0; i < this->ppara.glide; i++) {
+        int new_end0 = dual(this->checkpoint, this->end[0], this->end[1]);
+        int new_end1 = dual(this->end[0], new_end0, this->end[1]);
+
+        // 键插入位置
+        int n1 = between(this->end[0], this->end[1], new_end0);
+        int n2 = between(new_end1, this->end[1], new_end0);
+
+        remove(nano::pair<int>(this->end[1], new_end0));
+        insert(nano::pair<int>(this->end[0], new_end1), n1, n2);
+        this->checkpoint = this->end[0];
+        this->end[0] = new_end0;
+        this->end[1] = new_end1;
     }
     
-    // 攀移，尽量增大 repeat（大于等于 3），避免与最后几个原子重合造成隐患
+    /* // 攀移，尽量增大 repeat（大于等于 3），避免与最后几个原子重合造成隐患
     if (this->ppara.climb < 0) {
         // 减原子攀移
         for (int i=0; i<-this->ppara.climb; i++) {
@@ -164,5 +178,5 @@ void model::add_dislocation() {
     }
     
     this->end[0] = flat(bn);
-    this->end[1] = flat(bn + other);
+    this->end[1] = flat(bn + other);*/
 }
