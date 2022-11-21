@@ -98,6 +98,12 @@ private:
         this->adjacents[bond[1]].insert(bond[0], n2);
     }
     
+    // 在位置 p 插入粒子，返回粒子序号
+    inline int insert(nano::vector p) {
+        this->nodes.push_back(p);
+        return this->nodes.size() - 1;
+    }
+    
     // 在键中间的位置
     inline int between(int i, int j, int k) {
         // 键插入位置

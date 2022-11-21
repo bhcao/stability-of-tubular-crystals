@@ -118,65 +118,72 @@ void model::remove(int node) {
 void model::add_dislocation() {    
     // 滑移
     for (int i=0; i < this->ppara.glide; i++) {
+        // 滑移四边形
         int new_end0 = dual(this->checkpoint, this->end[0], this->end[1]);
         int new_end1 = dual(this->end[0], new_end0, this->end[1]);
 
-        // 键插入位置
-        int n1 = between(this->end[0], this->end[1], new_end0);
-        int n2 = between(new_end1, this->end[1], new_end0);
-
         remove(nano::pair<int>(this->end[1], new_end0));
-        insert(nano::pair<int>(this->end[0], new_end1), n1, n2);
+        insert(nano::pair<int>(this->end[0], new_end1), 
+            between(this->end[0], this->end[1], new_end0), 
+            between(new_end1, this->end[1], new_end0));
+
+        // 检查点、位错点恢复
         this->checkpoint = this->end[0];
         this->end[0] = new_end0;
         this->end[1] = new_end1;
     }
     
-    /* // 攀移，尽量增大 repeat（大于等于 3），避免与最后几个原子重合造成隐患
-    if (this->ppara.climb < 0) {
-        // 减原子攀移
-        for (int i=0; i<-this->ppara.climb; i++) {
-            this->nodes[flat(bn + other)] = this->nodes.pop_back();
-            bn = bn + other;
-            this->bonds.remove({flat(bn), flat(bn + left)});
-            this->bonds.remove({flat(bn), flat(bn - left)});
-            this->bonds.remove({flat(bn), flat(bn + right)});
-            this->bonds.remove({flat(bn), flat(bn - right)});
-            this->bonds.replace({flat(bn), flat(bn + center)},
-                {flat(bn + go), flat(bn - go)});
-            this->bonds.push_back({flat(bn+go), flat(bn+other)});
-            for (int i=0; i<this->bonds.size(); i++) {
-                if (this->bonds[i].replace(this->nodes.size(), flat(bn))) 
-                    break;
-            }
-            bn = bn + go;
-        }
-
-    } else if (this->ppara.climb > 0) {
-        // 增原子攀移
-        int theright = flat(bn + other);
-        int theleft = flat(bn + other - go);
-        for (int i=0; i<this->ppara.climb; i++) {
-            // 更新
-            this->nodes.push_back((this->nodes[flat(bn)] + this->nodes[flat(bn-go)])/2);
-            int thethis = this->nodes.size()-1;
-            this->bonds.push_back({thethis, theright});
-            this->bonds.push_back({thethis, theleft});
-            this->bonds.push_back({thethis, flat(bn - center)});
-            this->bonds.replace({flat(bn), flat(bn - go)},
-                {thethis, flat(bn - go)});
-            this->bonds.replace({flat(bn), theleft},
-                {thethis, flat(bn)});
-            bn = bn - center;
-            // 下一次更新
-            theright = thethis;
-            theleft = flat(bn + other);
-        }
-        this->end[0] = flat(bn);
-        this->end[1] = theright;
-        return;
+    // 攀移，尽量增大 repeat（大于等于 3），避免与最后几个原子重合造成隐患
+    if (this->ppara.climb < 0)  // 减原子攀移
+    for (int i=0; i<-this->ppara.climb; i++) {
+        // 攀移六边形
+        int center = dual(this->checkpoint, this->end[0], this->end[1]);
+        int c1 = dual(this->end[0], center, this->end[1]);
+        int c2 = dual(this->end[1], center, c1);
+        int c3 = dual(c1, center, c2);
+        int new_end0 = dual(c2, center, c3);
+        
+        remove(center);
+        insert(nano::pair<int>(this->end[0], c1), 
+            between(this->end[0], this->end[1], new_end0), 
+            between(c1, this->end[1], c2));
+        insert(nano::pair<int>(this->end[0], c2), 
+            between(this->end[0], c1, new_end0), 
+            between(c2, c1, c3));
+        insert(nano::pair<int>(this->end[0], c3), 
+            between(this->end[0], c2, new_end0), 
+            between(c3, c2, new_end0));
+        
+        this->end[1] = this->end[0];
+        this->end[0] = new_end0;
+        this->checkpoint = dual(c3, this->end[0], this->end[1]);
     }
-    
-    this->end[0] = flat(bn);
-    this->end[1] = flat(bn + other);*/
+
+    if (this->ppara.climb > 0)  // 增原子攀移
+    for (int i=0; i<this->ppara.climb; i++) {
+        // 攀移五边形
+        int c1 = dual(this->checkpoint, this->end[0], this->end[1]);
+        int c2 = dual(this->end[0], c1, this->end[1]);
+        int new_end1 = dual(c1, c2, this->end[1]);
+        
+        remove(nano::pair<int>(this->end[1], c1));
+        remove(nano::pair<int>(this->end[1], c2));
+        int new_end0 = insert((this->nodes[this->end[0]] + this->nodes[this->end[1]] +
+            this->nodes[c1] + this->nodes[c2] + this->nodes[new_end1])/5);
+        // 因为 new_end0 的插入是按顺序来的，没必要找 between
+        insert(nano::pair<int>(new_end0, this->end[0]), 0, 
+            between(this->end[0], this->end[1], c1));
+        insert(nano::pair<int>(new_end0, this->end[1]), 1, 
+            between(this->end[1], this->end[0], new_end1));
+        insert(nano::pair<int>(new_end0, new_end1), 2,
+            between(new_end1, this->end[1], c2));
+        insert(nano::pair<int>(new_end0, c2), 3,
+            between(c2, new_end1, c1));
+        insert(nano::pair<int>(new_end0, c1), 4,
+            between(c1, this->end[0], c2));
+        
+        this->checkpoint = this->end[1];
+        this->end[0] = new_end0;
+        this->end[1] = new_end1;
+    }
 }
