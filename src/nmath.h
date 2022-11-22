@@ -160,7 +160,7 @@ public:
 
     // 在点 n 插入，顺序保留
     void insert(T from, int n) {
-        for (int i=this->len-1; i>n; i--)
+        for (int i=this->len; i>n; i--)
             this->s_data[i] = this->s_data[i-1];
         this->s_data[n] = from;
         this->len++;
@@ -192,6 +192,7 @@ public:
     inline void operator=(sarray<T> p) {
         for (int i=0; i<p.len; i++)
             this->s_data[i] = p.s_data[i];
+        this->len = p.len;
     }
 
 private:

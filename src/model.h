@@ -11,7 +11,7 @@
 #define NANO_MODEL_H_
 
 #include <cmath>
-#include <cassert>
+
 #include "nmath.h"
 #include "molecule.h"
 
@@ -74,7 +74,6 @@ private:
     // ck 关于 a,b 的对偶点，就是既与 a 又与 b 相连的两个点中的另一个
     inline int dual(int ck, int a, int b) {
         int i = this->adjacents[a].find(b);
-        assert(i!=-1);
         if (i == -1)
             return -1; // 错误（提示，其他错误不会检查）
         // i 左右邻居
@@ -110,8 +109,6 @@ private:
         // 键插入位置
         int m = this->adjacents[i].find(j);
         int n = this->adjacents[i].find(k);
-        assert(m!=-1);
-        assert(n!=-1);
         // m=0 在 n 后，n=0 在 m 后，否则在中间
         return (m == 0) ? n+1 : ((n == 0) ? m+1 : ((n>m) ? n : m));
     }

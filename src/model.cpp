@@ -109,7 +109,7 @@ void model::remove(int node) {
     this->nodes[node] = this->nodes[this->nodes.size()-1];
     this->nodes.pop_back();
     // 移除相邻键
-    for (int i = 0; i<this->adjacents[node].size(); i++)
+    for (int i = this->adjacents[node].size()-1; i>=0; i--)
         this->remove(nano::pair<int>(node, this->adjacents[node][i]));
     this->adjacents[node] = this->adjacents[this->nodes.size()];
     this->adjacents.pop_back();
