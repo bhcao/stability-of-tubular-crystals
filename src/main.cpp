@@ -17,6 +17,7 @@ int main(int argc, char* argv[]) {
         ppara.glide = glide;
         ppara.climb = climb;
         ppara.tau = 1e-5;
+        ppara.bn = 10;
         // 以 ppara 参数生成模型
         // 模型已经生成，之后再修改模型参数也没用
         model this_model(ppara);
@@ -34,14 +35,14 @@ int main(int argc, char* argv[]) {
         this_model.dump(name, nano::DATA_FILE | nano::EMPHASIS);
         this_model.dump(name, nano::LAN_FORCE | nano::P_ENERGY | nano::EMPHASIS);
     
-        for (int k=0; k<100; k++) {
+        for (int k=0; k<10000; k++) {
             // 模型计算更新
             this_model.update();
-            if (k%10==0) {
+            if (k%100==0) {
                 // 输出当前模型至 dump 文件
                 this_model.dump(name, nano::LAN_FORCE | nano::P_ENERGY | nano::EMPHASIS);
                 // 计算总能量并增加至图片
-                std::cout << this_model.total_energy();
+                std::cout << this_model.total_energy() << std::endl;
             }
         }
     }

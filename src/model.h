@@ -16,13 +16,14 @@
 #include "molecule.h"
 
 // 参数默认值
-#define default_para {13,13,3,1,3,3,0.1,1,3e-7,1e-6,1,1,273}
+#define default_para {13,13,3,1,3,3,0,0.1,1,3e-7,1e-6,1,1,273}
 
 // 参数
 typedef struct {
     // 模型构建参数
     int m, n, repeat;  // 完美结构
     int direction, glide, climb;  // 位错设定
+    int bn; // 位错初始位置，理论上是无关因子
 
     // 能量参数（键原长、系数）（energy.cpp 用的）
     double rest_len, k, tau;

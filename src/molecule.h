@@ -99,7 +99,7 @@ private:
 
     // 梯度
     inline nano::vector div(nano::vector center, nano::sarray<int> others) {
-        nano::vector temp[3] = {center};
+        nano::vector temp[3] = {center, center, center};
         temp[0][0] += precision;
         temp[1][1] += precision;
         temp[2][2] += precision;

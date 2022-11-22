@@ -21,7 +21,7 @@ model::model(para p): molecule(p.step, p.mass, p.damp, p.tempr,
     perfect_model_topology();
     
     // 初始化位错，设置检查点等
-    this->begin[1] = this->end[0] = flat(0, (p.repeat + 1) * p.m / 2);
+    this->begin[1] = this->end[0] = flat(0, (p.repeat + 1) * p.m / 2) + p.bn;
     nano::sarray<int>& center = this->adjacents[this->end[0]];
     if (p.direction > 0)
         this->begin[0] = this->end[1] = center[std::abs(p.direction)];
