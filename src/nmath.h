@@ -56,6 +56,11 @@ inline vector cross(vector p1, vector p2) {
         p1[0]*p2[1] - p1[1]*p2[0]);
 }
 
+// 两个向量比较
+inline bool operator==(vector p1, vector p2) {
+    return p1[0]==p2[0] && p1[1]==p2[1] && p1[2]==p2[2];
+}
+
 // vector 间的距离
 inline double mod(vector p) { return std::sqrt(p * p); }
 
@@ -114,6 +119,7 @@ public:
     // 增加减少元素
     inline void push_back(T in) { this->data[this->len++] = in;}
     inline T pop_back() { return this->data[--this->len];}
+    virtual bool remove(T from) = 0; // 移除指定元素
 
     // 增加长度，仅仅为了方便 adjacent 使用
     inline void set_size(int i) { this->len = i; }
@@ -123,6 +129,16 @@ public:
             if (this->data[i] == from)
                 return i;
         return -1;
+    }
+    
+    // 交换两个，from -> to
+    bool replace(T from, T to) {
+        for (int i=0; i<this->len; i++)
+        if (this->data[i] == from) {
+            this->data[i] = to;
+            return true;
+        }
+        return false;
     }
 
 protected:
@@ -151,7 +167,7 @@ public:
     }
 
     // 移除 from，顺序保留
-    bool getrid(T from) {
+    bool remove(T from) {
         for (int i=0; i<this->len; i++)
         if (this->data[i] == from) {
             for (int j=i; j<this->len-1; j++)
@@ -160,6 +176,22 @@ public:
             return true;
         }
         return false;
+    }
+    
+    // 比较（有纯虚函数的类不能做参数）
+    bool operator==(sarray<T> p) {
+        if (this->size() != p.size())
+            return false;
+        for (int i=0; i<this->size(); i++)
+            if (this->data[i] != p.data[i])
+                return false;
+        return true;
+    }
+    
+    // 重载赋值函数，避免指针被拷贝了
+    inline void operator=(sarray<T> p) {
+        for (int i=0; i<p.len; i++)
+            this->s_data[i] = p.s_data[i];
     }
 
 private:
@@ -175,16 +207,6 @@ public:
     inline ~darray() { delete []this->data; }
     inline int cap() { return this->capacity; }
 
-    // 交换两个，from -> to（顺序不保存）
-    bool replace(T from, T to) {
-        for (int i=0; i<this->len; i++)
-        if (this->data[i] == from) {
-            this->data[i] = to;
-            return true;
-        }
-        return false;
-    }
-
     // 移除 from，成功返回 true，否则 false（顺序不保存）
     bool remove(T from) {
         for (int i=0; i<this->len; i++)
@@ -193,6 +215,16 @@ public:
             return true;
         }
         return false;
+    }
+
+    // 比较（有纯虚函数的类不能做参数）
+    bool operator==(darray<T> p) {
+        if (this->size() != p.size())
+            return false;
+        for (int i=0; i<this->size(); i++)
+            if (this->data[i] != p.data[i])
+                return false;
+        return true;
     }
 
 private:

@@ -48,6 +48,7 @@ void molecule::update() {
     for (int i=0; i<this->nodes.size(); i++) {
         this->velocities[i] += accelerate(this->nodes[i], this->velocities[i], this->adjacents[i]) * this->step;
         this->nodes[i] += this->velocities[i] * this->step;
+        this->time++;
     }
 }
 

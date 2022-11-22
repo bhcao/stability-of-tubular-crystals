@@ -111,8 +111,13 @@ void model::remove(int node) {
     // 移除相邻键
     for (int i = 0; i<this->adjacents[node].size(); i++)
         this->remove(nano::pair<int>(node, this->adjacents[node][i]));
-    this->adjacents[node] = this->adjacents[this->nodes.size()-1];
+    this->adjacents[node] = this->adjacents[this->nodes.size()];
     this->adjacents.pop_back();
+    // 改变与最后一个原子相邻的标记，保证一致性
+    for (int i=0; i<this->bonds.size(); i++)
+        this->bonds[i].replace(this->nodes.size(), node);
+    for (int i=0; i<this->adjacents[node].size(); i++)
+        this->adjacents[this->adjacents[node][i]].replace(this->nodes.size(), node);
 }
 
 void model::add_dislocation() {    
@@ -168,8 +173,7 @@ void model::add_dislocation() {
         
         remove(nano::pair<int>(this->end[1], c1));
         remove(nano::pair<int>(this->end[1], c2));
-        int new_end0 = insert((this->nodes[this->end[0]] + this->nodes[this->end[1]] +
-            this->nodes[c1] + this->nodes[c2] + this->nodes[new_end1])/5);
+        int new_end0 = insert((this->nodes[this->end[1]] + this->nodes[c2] + this->nodes[c1])/3);
         // 因为 new_end0 的插入是按顺序来的，没必要找 between
         insert(nano::pair<int>(new_end0, this->end[0]), 0, 
             between(this->end[0], this->end[1], c1));
