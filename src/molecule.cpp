@@ -124,7 +124,7 @@ void molecule::dump(std::string fname, nano::dump_t dump_type) {
                 fout << "\t" << temp[0] << "\t" << temp[1] << "\t" << temp[2];
             }
             if (DUMP_CHECK(nano::K_ENERGY, dump_type))
-                fout << "\t" << nano::mod(this->velocities[i]);
+                fout << "\t" << this->mass/2*nano::mod(this->velocities[i]);
             if (DUMP_CHECK(nano::P_ENERGY, dump_type))
                 fout << "\t" << local_energy(this->nodes[i], this->adjacents[i]);
         }

@@ -6,8 +6,8 @@
 #include "nmath.h"
 
 int main(int argc, char* argv[]) {
-    for (int climb=-3; climb<4; climb++)
-    for (int glide=0; glide<5; glide++) {
+    for (int climb=2; climb<3; climb++)
+    for (int glide=3; glide<4; glide++) {
 
         // 默认模型参数 default_para
         para ppara = default_para;
@@ -24,7 +24,7 @@ int main(int argc, char* argv[]) {
     
         // 更改运行时参数
         this_model.set_precision(1e-9);
-        this_model.set_step(1e-7);
+        this_model.set_step(2e-5);
     
         nano::pair<double> x = this_model.dis_pair_distance();
         std::cout << "位错距离为 x=" << x[0] << ", z=" << x[1] << std::endl;
@@ -35,7 +35,7 @@ int main(int argc, char* argv[]) {
         this_model.dump(name, nano::DATA_FILE | nano::EMPHASIS);
         this_model.dump(name, nano::LAN_FORCE | nano::P_ENERGY | nano::EMPHASIS);
     
-        for (int k=0; k<10000; k++) {
+        for (int k=0; k<1000; k++) {
             // 模型计算更新
             this_model.update();
             if (k%100==0) {

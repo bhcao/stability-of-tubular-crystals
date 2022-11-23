@@ -48,6 +48,16 @@ public:
         double half_dist = std::sqrt(temp[0]*temp[0]+temp[1]*temp[1])/2;
         return nano::pair<double>(r * std::asin(half_dist/r), temp[2]);
     }
+    
+    inline double set_rest_len(double para) {
+        return (para <= 0) ? this->paras[0] : (this->paras[0] = para);
+    }
+    inline double set_k(double para) {
+        return (para <= 0) ? this->paras[1] : (this->paras[1] = para);
+    }
+    inline double set_tau(double para) {
+        return (para <= 0) ? this->paras[2] : (this->paras[2] = para);
+    }
 
 private:
     // 位错对
