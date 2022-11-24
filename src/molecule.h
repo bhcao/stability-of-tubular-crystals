@@ -12,6 +12,7 @@
 #include <string>
 
 #include "nmath.h"
+#include "narray.h"
 
 namespace nano {
 
@@ -40,6 +41,11 @@ public:
         int bond_div_node_n): time(0), step(step), precision(1e-10), mass(mass), 
         damp(damp), tempr(tempr), nodes(node_n), velocities(node_n), adjacents(node_n), 
         bonds(bond_div_node_n * node_n) {}
+    
+    // restart 方法，从文件中读取，储存到文件中（加两个能量函数设置）
+    molecule(std::string fname, double(*node_energy)(nano::vector, nano::sarray<nano::vector>,
+        nano::sarray<double>), double(*bond_energy)(nano::vector, nano::vector, nano::sarray<double>));
+    void store(std::string fname);
 
     double total_energy();  // 系统整体的能量
     void update();          // 更新函数
@@ -49,8 +55,8 @@ public:
 
     // 设置参数，如果小于零只输出当前参数，funcname 函数名，paraname 参数名
     #define SET_PARA_FUNC(name) \
-        inline double set_ ## name(double paraname) { \
-            return (paraname <= 0) ? this->name : (this->name = paraname); \
+        inline double set_ ## name(double para) { \
+            return (para < 0) ? this->name : (this->name = para); \
         }
     
     // 包装的目的是防止乱动
@@ -60,6 +66,17 @@ public:
     SET_PARA_FUNC(damp)
     SET_PARA_FUNC(tempr)
     
+    // 如果大于数组长度扩充长度，para < 0 返回 -1
+    inline double set_paras(double para, int i) {
+        if (i < this->paras.size())
+            return (para < 0) ? this->paras[i] : (this->paras[i] = para);
+        if (para >= 0) {
+            this->paras.set_size(i+1);
+            return this->paras[i] = para;
+        }
+        return -1;
+    }
+
 protected:
     // 坐标、速度、相邻粒子（代替键）
     nano::darray<nano::vector> nodes;
@@ -74,13 +91,15 @@ protected:
     double (*node_energy)(nano::vector center, nano::sarray<nano::vector> others, nano::sarray<double> paras);
     // 函数指针，以键为中心的能量
     double (*bond_energy)(nano::vector a, nano::vector b, nano::sarray<double> paras);
-    nano::sarray<double> paras; // 能量参数，会传递至 node_energy、bond_energy 函数
 
 private:
     // 运行参数
     double step;      // 更新的步长
     int time;         // 当前时间（运行次数）
     double precision; // 求导精度（增加的 delta 长度）
+
+    // 能量参数，会传递至 node_energy、bond_energy 函数
+    nano::sarray<double> paras;
 
     // 物理参数
     double mass;      // 粒子质量

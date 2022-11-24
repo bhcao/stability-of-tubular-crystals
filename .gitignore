@@ -1,13 +1,10 @@
-# figure
-
-energy*.png
-
 # binary
 
 *.o
 *.out
 *.so
 *.exe
+*.bin
 
 # lammps
 
@@ -22,6 +19,10 @@ energy*.png
 
 build
 
-# temp file
+# main function used
 
-__*__temp__*
+src/main.cpp
+
+# test
+
+test

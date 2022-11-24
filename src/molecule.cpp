@@ -4,6 +4,7 @@
 #include <string>
 
 #include "nmath.h"
+#include "narray.h"
 #include "molecule.h"
 
 double molecule::local_energy(nano::vector center, nano::sarray<int> others) {
@@ -141,4 +142,36 @@ void molecule::dump(std::string fname, nano::dump_t dump_type) {
 
     fout.close();
     return;
+} 
+
+molecule::molecule(std::string fname, double(*in_node_energy)(nano::vector, nano::sarray<nano::vector>,
+    nano::sarray<double>), double(*in_bond_energy)(nano::vector, nano::vector, nano::sarray<double>)):
+    node_energy(in_node_energy), bond_energy(in_bond_energy) {
+    std::ifstream fin(fname, std::ios::in | std::ios::binary);
+
+    #define READ(name) fin.read((char*)&this->name, sizeof(this->name));
+    READ(step) READ(precision) READ(mass) READ(damp) 
+    READ(tempr) READ(time) READ(paras) READ(emphasis)
+
+    this->nodes.deserialize(fin);
+    this->velocities.deserialize(fin);
+    this->adjacents.deserialize(fin);
+    this->bonds.deserialize(fin);
+
+    fin.close();
+}
+
+void molecule::store(std::string fname) {
+    std::ofstream fout(fname, std::ios::out | std::ios::binary);
+
+    #define WRITE(name) fout.write((char*)&this->name, sizeof(this->name));
+    WRITE(step) WRITE(precision) WRITE(mass) WRITE(damp) 
+    WRITE(tempr) WRITE(time) WRITE(paras) WRITE(emphasis)
+    
+    this->nodes.serialize(fout);
+    this->velocities.serialize(fout);
+    this->adjacents.serialize(fout);
+    this->bonds.serialize(fout);
+
+    fout.close();
 }

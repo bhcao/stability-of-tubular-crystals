@@ -10,3 +10,4 @@ clean:
 	rm -f *.out *.a
 	rm -f energy*.png
 	rm -f __*__temp__*
+	rm -f restart*.bin

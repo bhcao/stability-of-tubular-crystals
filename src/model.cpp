@@ -1,6 +1,7 @@
 #include <cmath>
 
 #include "model.h"
+#include "narray.h"
 #include "nmath.h"
 
 // 原子数和键数保证增原子攀移时不会越界，同时防止减原子攀移初始时越界
@@ -8,7 +9,7 @@ model::model(para p): molecule(p.step, p.mass, p.damp, p.tempr,
         p.m * p.n * p.repeat + ((p.climb < 0) ? 0 : p.climb), 3) {
 
     // 能量参数传递给 molecule，参数储存
-    this->paras[0] = p.rest_len; this->paras[1] = p.k; this->paras[2] = p.tau;
+    set_paras(p.rest_len, 0); set_paras(p.k, 1); set_paras(p.tau, 2);
     this->ppara = p;
     
     // 能量函数绑定，迫不得已使用 wrap 的参数，因为 lambda 表达式不能捕获局部变量
@@ -31,7 +32,7 @@ model::model(para p): molecule(p.step, p.mass, p.damp, p.tempr,
     this->checkpoint = dual(center[std::abs(p.direction) - 1], this->end[0], this->end[1]);
 
     add_dislocation();
-    
+    this->adjacents.set_size(this->nodes.size()); // 邻接同步
     // 如果发生了位错，加入强调的粒子中
     if (this->begin[0] != this->end[1]) {
         this->emphasis.push_back(this->begin[0]);
