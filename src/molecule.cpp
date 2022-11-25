@@ -22,11 +22,14 @@ double molecule::local_energy(nano::vector center, nano::sarray<int> others) {
 }
 
 // 借助 local_energy 键要算两次，效率低，但可以省去键结构，逻辑也更清晰
-double molecule::total_energy() {
+double molecule::total_energy(nano::vector range_l, nano::vector range_r) {
     double count = 0;
     // 以粒子为中心的能量
     for (int i=0; i<this->nodes.size(); i++) {
-        count += local_energy(this->nodes[i], this->adjacents[i]);
+        if (this->nodes[i][0] > range_l[0] && this->nodes[i][0] < range_r[0] &&
+            this->nodes[i][1] > range_l[1] && this->nodes[i][1] < range_r[1] &&
+            this->nodes[i][2] > range_l[2] && this->nodes[i][2] < range_r[2])
+            count += local_energy(this->nodes[i], this->adjacents[i]);
     }
     return count;
 }

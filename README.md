@@ -57,6 +57,12 @@ model this_model(ppara);        // 以 ppara 参数初始化
 this_model.set_precision(1e-9); // 动态更新参数
 ```
 
+对于能量参数，设置时没有名称，需使用 `set_paras` 函数，使用如下
+```cpp
+this_model.set_paras(0.1, 2); // 设置 tau
+```
+第一个参数是值，第二个参数指定参数，0 为 rest_len，1 为 k，2 为 tau。
+
 ### 模型参数说明
 
 1. 标 √ 的表示理论上会影响稳定时能量和形状的参数，其它参数理论上不应该影响结果。第三组参数呈比例增加理论上也不该影响结果。
@@ -137,8 +143,20 @@ this_model.dump("test", nano::EMPHASIS | nano::LAN_FORCE);
 ```cpp
 // 位错对间距，返回值第一个为垂轴，第二个为沿轴
 nano::pair<double> model::dis_pair_distance();
-double molecule::total_energy(); // 总能量
+// 总能量，第一个参数为下界，第二个参数为上界
+double molecule::total_energy(nano::vector bound1, nano::vector bound2);
 void molecule::update(); // 运行一次
+```
+
+### 储存与恢复
+
+将当前状态储存为二进制文件：
+```cpp
+this_model.store("restore.bin"); // 参数为文件名
+```
+恢复时不需要 model 类，直接调用 molecule 初始化函数即可
+```cpp
+molecule this_model("restart.bin", my_node_energy, my_bond_energy);
 ```
 
 ### 文件概览

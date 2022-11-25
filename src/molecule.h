@@ -47,7 +47,7 @@ public:
         nano::sarray<double>), double(*bond_energy)(nano::vector, nano::vector, nano::sarray<double>));
     void store(std::string fname);
 
-    double total_energy();  // 系统整体的能量
+    double total_energy(nano::vector range_l, nano::vector range_r);  // 系统整体的能量
     void update();          // 更新函数
 
     // 输出到以 fname 为名的文件，注意 .dump 会追加而不是覆盖，尽量删除再运行（默认 dump 什么也不输出）
