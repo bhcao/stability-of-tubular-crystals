@@ -41,10 +41,13 @@ model::model(para p): molecule(p.step, p.mass, p.damp, p.tempr,
         this->emphasis.push_back(this->end[1]);
     }
 
-    // 随机初始速度（平均速度与温度有关）
+#if DYNAMICS == 1 // 非过阻尼时随机初始速度（平均速度与温度有关）
     double v = std::sqrt(3*K_B*this->ppara.tempr*this->ppara.mass);
     for (int i=0; i<this->nodes.size(); i++)
         this->velocities.push_back(v*nano::rand_vector());
+#else
+    update_velocity(); // 主要是方便初始化输出
+#endif
 }
 
 // 生成点

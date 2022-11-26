@@ -48,9 +48,25 @@ double molecule::local_energy_for_update(nano::vector center, nano::sarray<int> 
     return count;
 }
 
-void molecule::update() {
+void molecule::update_velocity() {
     for (int i=0; i<this->nodes.size(); i++) {
-        this->velocities[i] += accelerate(this->nodes[i], this->velocities[i], this->adjacents[i]) * this->step;
+        #if DYNAMICS == 0 // 梯度下降
+        this->velocities[i] = -div(this->nodes[i], this->adjacents[i]);
+        #elif DYNAMICS == 1  // 求加速度（朗之万），朗之万方程三项
+        nano::vector accelerate = -div(this->nodes[i], this->adjacents[i])/this->mass - 
+            this->damp*this->velocities[i] + std::sqrt(2*this->damp*this->tempr*K_B/this->mass)*
+            nano::rand_vector();
+        this->velocities[i] += accelerate * this->step;
+        #elif DYNAMICS == 2  // 过阻尼朗之万
+        this->velocities[i] = -div(this->nodes[i], this->adjacents[i])/this->damp + std::sqrt(2*this->damp*
+            this->tempr*K_B/this->mass)*nano::rand_vector()/this->damp;
+        #endif
+    }
+}
+
+void molecule::update() {
+    update_velocity();
+    for (int i=0; i<this->nodes.size(); i++) {
         this->nodes[i] += this->velocities[i] * this->step;
     }
     this->time++;
@@ -63,12 +79,12 @@ void molecule::dump(std::string fname, nano::dump_t dump_type) {
     std::ios::openmode file_mode = (!DUMP_CHECK(nano::DATA_FILE, dump_type) && (this->time != 0)) ?
         std::ios::app : (std::ios::out | std::ios::trunc);
     fname += !DUMP_CHECK(nano::DATA_FILE, dump_type) ? ".dump" : 
-        ("." + std::to_string(this->time) + ".data");
+        ("_" + std::to_string(this->time) + ".data");
     std::ofstream fout;
     fout.open(fname, file_mode);
 
     // 设置边界
-    double boundary[6] = {0, 1, 0, 1, 0, 1};
+    double boundary[6] = {0, 30*this->paras[0], 0, 30*this->paras[0], 0, 30*this->paras[0]};
     
     // 文件头，data 文件的
     if (DUMP_CHECK(nano::DATA_FILE, dump_type)) {
@@ -123,8 +139,10 @@ void molecule::dump(std::string fname, nano::dump_t dump_type) {
                 fout << "\t" << temp[0] << "\t" << temp[1] << "\t" << temp[2];
             }
             if (DUMP_CHECK(nano::LAN_FORCE, dump_type)) {
-                nano::vector temp = this->mass * accelerate(this->nodes[i], this->velocities[i],
-                    this->adjacents[i]);
+                nano::vector accelerate = -div(this->nodes[i], this->adjacents[i])/this->mass - 
+                    this->damp*this->velocities[i] + std::sqrt(2*this->damp*this->tempr*
+                    K_B/this->mass)*nano::rand_vector();
+                nano::vector temp = this->mass * accelerate;
                 fout << "\t" << temp[0] << "\t" << temp[1] << "\t" << temp[2];
             }
             if (DUMP_CHECK(nano::K_ENERGY, dump_type))

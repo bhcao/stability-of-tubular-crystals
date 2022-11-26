@@ -33,6 +33,11 @@ const dump_t P_ENERGY   = 1 << 6; // 输出局部势能
 
 }
 
+// 采用的动力学模型，0 为梯度下降，1 为朗之万动力学，2 为过阻尼朗之万动力学
+#ifndef DYNAMICS
+    #define DYNAMICS 2
+#endif
+
 // 集合了节点、键、相邻的类，必须子类包装
 class molecule {
 public:
@@ -91,6 +96,9 @@ protected:
     double (*node_energy)(nano::vector center, nano::sarray<nano::vector> others, nano::sarray<double> paras);
     // 函数指针，以键为中心的能量
     double (*bond_energy)(nano::vector a, nano::vector b, nano::sarray<double> paras);
+    
+    // 更新速度，主要方便初始化
+    void update_velocity();
 
 private:
     // 运行参数
@@ -109,12 +117,6 @@ private:
     // 局部能量，第一个键能平分，算局部和总体能量，第二个键能不平分
     double local_energy(nano::vector center, nano::sarray<int> others);
     double local_energy_for_update(nano::vector center, nano::sarray<int> others);
-    
-    // 求加速度（朗之万），朗之万方程三项
-    inline nano::vector accelerate(nano::vector center, nano::vector speed, nano::sarray<int> others) {
-        return (-1)*div(center, others)/this->mass - this->damp*speed + 
-            std::sqrt(2*this->damp*this->tempr*K_B/this->mass)*nano::rand_vector();
-    }
 
     // 梯度
     inline nano::vector div(nano::vector center, nano::sarray<int> others) {

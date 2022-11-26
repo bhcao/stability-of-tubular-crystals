@@ -2,6 +2,8 @@
 #include <string>
 #include <cmath>
 
+#define DYNAMICS 2 // 过阻尼朗之万
+
 #include "molecule.h"
 #include "nmath.h"
 

@@ -34,6 +34,16 @@ $$R=\frac{|AB|}{2\pi}=\frac{a\sqrt{m^2+n^2-mn}}{2\pi}.$$
 ![滑移方向约定](https://gitee.com/Bovera/nanotube/raw/master/fig/direction.png)  
 <p align="center"> 图 4. 滑移方向约定 </p>
 
+### 动力学
+
+通过在引入 `molucule.h` 前定义 `DYNAMICS` 宏选择动力学方法，`DYNAMICS` 值分别为
+| 值 | 模型           | 说明 |
+| -- | ---           | --- |
+|0  | 梯度下降         | 等价于质量温度均为 0，阻尼为 1 的朗之万动力学 |
+|1  | 朗之万动力学      |  |
+|2  | 过阻尼朗之万动力学 | 等价于质量为 0 的朗之万动力学 |
+注意对于梯度下降和过阻尼朗之万动力学，部分参数无效，详见后文。
+
 ## 函数及其参数
 
 ### 模型参数设置方法
@@ -103,9 +113,9 @@ this_model.set_paras(0.1, 2); // 设置 tau
 
 || 参数                      | 解释          |
 |--| ---                      | ---         |
-|⋯|`double mass = 1`        | 粒子质量 |
-|⋯|`double damp = 1`        | 朗之万阻尼系数 |
-|⋯|`double tempr = 273`     | 系统温度 |
+|⋯|`double mass = 1`        | 粒子质量（对过阻尼朗之万与梯度下降无效） |
+|⋯|`double damp = 1`        | 朗之万阻尼系数（对梯度下降无效） |
+|⋯|`double tempr = 273`     | 系统温度（对梯度下降无效） |
 
 ### 输出函数参数
 
@@ -135,7 +145,8 @@ this_model.dump("test", nano::EMPHASIS | nano::LAN_FORCE);
 > 1. 使用 .data 文件输出时除了 `EMPHASIS` 所有其他选项均失效；
 > 2. .data 输出包含键信息，.dump 输出不包含键信息；
 > 3. .data 多次输出会在不同文件，文件名自动加 .n.data，n 为当前运行时间；
-> 4. .dump 多次输出会在同一个文件追加，文件名自动加 .dump。
+> 4. .dump 多次输出会在同一个文件追加，文件名自动加 .dump；
+> 5. `LAN_FORCE` 和 `DIV_FORCE` 选项对于梯度下降和过阻尼朗之万无意义。
 
 ### 其他函数
 
