@@ -78,7 +78,7 @@ void molecule::dump(std::string fname, nano::dump_t dump_type) {
     // 打开文件以写入，文件名为 fname.dump（追加）或 fname.1.data
     std::ios::openmode file_mode = (!DUMP_CHECK(nano::DATA_FILE, dump_type) && (this->time != 0)) ?
         std::ios::app : (std::ios::out | std::ios::trunc);
-    fname += !DUMP_CHECK(nano::DATA_FILE, dump_type) ? ".dump" : 
+    fname += !DUMP_CHECK(nano::DATA_FILE, dump_type) ? "_0.dump" : 
         ("_" + std::to_string(this->time) + ".data");
     std::ofstream fout;
     fout.open(fname, file_mode);
@@ -107,7 +107,7 @@ void molecule::dump(std::string fname, nano::dump_t dump_type) {
             << boundary[0] << " " << boundary[1] << "\n"
             << boundary[2] << " " << boundary[3] << "\n"
             << boundary[4] << " " << boundary[5] << "\n"
-            << "ITEM: ATOMS id type xs ys zs";
+            << "ITEM: ATOMS id type x y z";
 
         // 检查是否要输出这些内容
         if (DUMP_CHECK(nano::VELOCITY, dump_type)) fout << " vx vy vz";
