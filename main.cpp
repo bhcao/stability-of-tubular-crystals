@@ -45,8 +45,7 @@ int main(int argc, char* argv[]) {
     std::cout << "位错距离为 x=" << x[0] << ", z=" << x[1] << std::endl;
 
     // 输出初始位型
-    this_model.dump("test", nano::DATA_FILE | nano::EMPHASIS);
-    this_model.dump("test", nano::LAN_FORCE | nano::P_ENERGY | nano::EMPHASIS);
+    this_model.dump("test", nano::DATA_FILE | nano::VELOCITY | nano::P_ENERGY | nano::EMPHASIS);
 #endif
 
     // 设置 z 方向计入的范围，x、y 设无穷即可
@@ -56,7 +55,7 @@ int main(int argc, char* argv[]) {
         // 模型计算更新
         this_model.update();
         if (k%100==0) {
-            this_model.dump("test", nano::LAN_FORCE | nano::P_ENERGY | nano::EMPHASIS);
+            this_model.dump("test", nano::DATA_FILE | nano::VELOCITY | nano::P_ENERGY | nano::EMPHASIS);
             std::cout << this_model.total_energy(-bound, bound) << std::endl; // 输出总能量
         }
     }

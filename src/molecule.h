@@ -18,6 +18,7 @@ namespace nano {
 
 // dump 参数，const C++ 会优化掉的，大胆用
 typedef int64_t dump_t;
+const dump_t NOTHING  = 0; // 空
 // 输出 DATA 文件，包含键信息，使用后一切其他选项失效
 const dump_t DATA_FILE  = 1 << 0;
 const dump_t EMPHASIS   = 1 << 1; // 强调粒子

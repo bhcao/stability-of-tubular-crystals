@@ -133,7 +133,8 @@ this_model.dump("test", nano::EMPHASIS | nano::LAN_FORCE);
 
 | 常量名        | 作用         |
 | ---          | ---         |
-|`DATA_FILE`   | 输出 .data 文件（不使用为 .dump）  |
+|`NOTHING`     | 啥也不干  |
+|`DATA_FILE`   | 输出 .data 文件  |
 |`EMPHASIS`    | 强调位错粒子（类型设为 2）    |
 |`VELOCITY`    | 输出粒子速度信息      |
 |`DIV_FORCE`   | 输出梯度力（能量梯度）     |
@@ -142,11 +143,10 @@ this_model.dump("test", nano::EMPHASIS | nano::LAN_FORCE);
 |`P_ENERGY`    | 输出局部势能（键能取一半） |
 
 > 注意：
-> 1. 使用 .data 文件输出时除了 `EMPHASIS` 所有其他选项均失效；
-> 2. .data 输出包含键信息，.dump 输出不包含键信息；
-> 3. .data 多次输出会在不同文件，文件名自动加 .n.data，n 为当前运行时间；
-> 4. .dump 多次输出会在同一个文件追加，文件名自动加 .dump；
-> 5. `LAN_FORCE` 和 `DIV_FORCE` 选项对于梯度下降和过阻尼朗之万无意义。
+> 1. 一定会输出 .dump 文件（不含键），使用了 `DATA_FILE` 才会输出 .data 文件（包含键信息）；
+> 2. .data 多次输出会在不同文件，文件名自动加 `_n.data`，n 为当前运行步数；.dump 会在同一个文件，文件名加 `_0.dump`；
+> 3. 命令行可以使用 `ovito name*` （不包含自动加的后缀）同时导入 `.data` 和 `.dump`，也可以导入 `.data` 文件后使用 load trajactory；
+> 4. `LAN_FORCE` 和 `DIV_FORCE` 选项对于梯度下降和过阻尼朗之万无意义。
 
 ### 其他函数
 
