@@ -46,6 +46,7 @@ model::model(para p): molecule(p.step, p.mass, p.damp, p.tempr,
     for (int i=0; i<this->nodes.size(); i++)
         this->velocities.push_back(v*nano::rand_vector());
 #else
+    this->velocities.set_size(this->nodes.size());
     update_velocity(); // 主要是方便初始化输出
 #endif
 }
