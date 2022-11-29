@@ -141,6 +141,8 @@ this_model.dump("test", nano::EMPHASIS | nano::LAN_FORCE);
 |`LAN_FORCE`   | 输出朗之万力（包括了阻尼和随机项）|
 |`K_ENERGY`    | 输出动能信息  |
 |`P_ENERGY`    | 输出局部势能（键能取一半） |
+|`GAUSS_CURVE` | 输出高斯曲率 |
+|`MEAN_CURVE`  | 输出平均曲率 |
 
 > 注意：
 > 1. 一定会输出 .dump 文件（不含键），使用了 `DATA_FILE` 才会输出 .data 文件（包含键信息）；

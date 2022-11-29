@@ -28,6 +28,8 @@ const dump_t DIV_FORCE  = 1 << 3; // 输出梯度力
 const dump_t LAN_FORCE  = 1 << 4; // 输出朗之万力
 const dump_t K_ENERGY   = 1 << 5; // 输出动能信息
 const dump_t P_ENERGY   = 1 << 6; // 输出局部势能
+const dump_t GAUSS_CURVE = 1 << 6; // 输出高斯曲率
+const dump_t MEAN_CURVE = 1 << 7; // 输出平均曲率
 
 // 检查 i 中是否有宏 name
 #define DUMP_CHECK(name, i) ((name & i) != 0)

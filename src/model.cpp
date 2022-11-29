@@ -3,6 +3,7 @@
 #include "model.h"
 #include "narray.h"
 #include "nmath.h"
+#include "energy.h"
 
 // 原子数和键数保证增原子攀移时不会越界，同时防止减原子攀移初始时越界
 model::model(para p): molecule(p.step, p.mass, p.damp, p.tempr, 
@@ -13,8 +14,8 @@ model::model(para p): molecule(p.step, p.mass, p.damp, p.tempr,
     this->ppara = p;
     
     // 能量函数绑定，迫不得已使用 wrap 的参数，因为 lambda 表达式不能捕获局部变量
-    this->bond_energy = my_bond_energy;
-    this->node_energy = my_node_energy;
+    this->bond_energy = energy_func::bond_energy_func;
+    this->node_energy = energy_func::node_energy_func;
     
     // 模型构建过程
     perfect_model_position();

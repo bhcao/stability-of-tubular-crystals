@@ -6,6 +6,7 @@
 #include "nmath.h"
 #include "narray.h"
 #include "molecule.h"
+#include "energy.h"
 
 double molecule::local_energy(nano::vector center, nano::sarray<int> others) {
     // 相邻粒子转化成坐标
@@ -133,10 +134,18 @@ if (DUMP_CHECK(nano::DATA_FILE, dump_type)) {
     if (DUMP_CHECK(nano::LAN_FORCE, dump_type)) fout << " fx fy fz";
     if (DUMP_CHECK(nano::K_ENERGY, dump_type)) fout << " ke";
     if (DUMP_CHECK(nano::P_ENERGY, dump_type)) fout << " pe";
+    if (DUMP_CHECK(nano::GAUSS_CURVE, dump_type)) fout << " Gaussian_Curvature";
+    if (DUMP_CHECK(nano::MEAN_CURVE, dump_type)) fout << " Mean_Curvature";
     fout << "\n";
     
     // 正文数据
     for (int i=0; i<this->nodes.size(); i++) {
+        nano::sarray<nano::vector> adjacent;
+        for (int j=0; j<this->adjacents[i].size(); j++)
+            adjacent.push_back(this->nodes[this->adjacents[i][j]]);
+        double size = energy_func::size_around(this->nodes[i], adjacent);
+        nano::sarray<double> angle = energy_func::angles_around(this->nodes[i], adjacent);
+
         fout << i << "\t " << types[i] << "\t" // 基础 id type xs ys zs
             << this->nodes[i][0] << '\t' << this->nodes[i][1] << '\t' << this->nodes[i][2];
         if (DUMP_CHECK(nano::VELOCITY, dump_type))
@@ -157,6 +166,10 @@ if (DUMP_CHECK(nano::DATA_FILE, dump_type)) {
             fout << "\t" << this->mass/2*nano::mod(this->velocities[i]);
         if (DUMP_CHECK(nano::P_ENERGY, dump_type))
             fout << "\t" << local_energy(this->nodes[i], this->adjacents[i]);
+        if (DUMP_CHECK(nano::GAUSS_CURVE, dump_type))
+            fout << "\t" << energy_func::gauss_curvature(this->nodes[i], adjacent, angle, size);
+        if (DUMP_CHECK(nano::MEAN_CURVE, dump_type))
+            fout << "\t" << energy_func::mean_curvature(this->nodes[i], adjacent, angle, size);
         fout << '\n';
     }
     fout.close();

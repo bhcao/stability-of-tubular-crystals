@@ -6,14 +6,12 @@
 
 #include "molecule.h"
 #include "nmath.h"
+#include "energy.h"
 
 // #define RESTART
 
 // 如果声明了重启，只导入能量函数；否则导入模型类
-#ifdef RESTART
-double my_bond_energy(nano::vector, nano::vector, nano::sarray<double>);
-double my_node_energy(nano::vector, nano::sarray<nano::vector>, nano::sarray<double>);
-#else
+#ifndef RESTART
 #include "model.h"
 #endif
 
@@ -25,7 +23,7 @@ int main(int argc, char* argv[]) {
 
 // 如果声明了重启，调用直接 molecule 初始化，否则调用 model 初始化
 #ifdef RESTART
-    molecule this_model("restart.bin", my_node_energy, my_bond_energy);
+    molecule this_model("restart.bin", energy_func::node_energy_func, energy_func::bond_energy_func);
 #else
     // 默认模型参数 default_para
     para ppara = default_para;

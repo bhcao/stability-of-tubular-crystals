@@ -123,8 +123,4 @@ private:
     void add_dislocation();
 };
 
-// 两类能量函数（在 energy.cpp 中）paras 顺序为 rest_len, k, tau
-double my_bond_energy(nano::vector p1, nano::vector p2, nano::sarray<double> paras);
-double my_node_energy(nano::vector center, nano::sarray<nano::vector> others, nano::sarray<double> paras);
-
 #endif // NANO_MODEL_H_
