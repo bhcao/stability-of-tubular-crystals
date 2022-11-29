@@ -11,6 +11,10 @@
 
 #include <string>
 
+#ifdef USE_KOKKOS
+#include <Kokkos_Core.hpp>
+#endif
+
 #include "nmath.h"
 #include "narray.h"
 
@@ -46,13 +50,22 @@ class molecule {
 public:
     // 初始化，求导精度有需要自行用 set_precision 调整，其他参数输入。bond_div_node_n 键数比原子数
     inline molecule(double step, double mass, double damp, double tempr, int node_n,
-        int bond_div_node_n): time(0), step(step), precision(1e-10), mass(mass), 
-        damp(damp), tempr(tempr), nodes(node_n), velocities(node_n), adjacents(node_n), 
-        bonds(bond_div_node_n * node_n) {}
+        int bond_div_node_n, int argc, char* argv[]): time(0), step(step), precision(1e-10), mass(mass), 
+        damp(damp), tempr(tempr), nodes(node_n), velocities(node_n), adjacents(node_n),
+        bonds(bond_div_node_n * node_n) {
+    #ifdef USE_KOKKOS
+        Kokkos::initialize(argc, argv);
+    #endif
+    }
+    
+#ifdef USE_KOKKOS
+    inline ~molecule() { Kokkos::finalize(); }
+#endif
     
     // restart 方法，从文件中读取，储存到文件中（加两个能量函数设置）
     molecule(std::string fname, double(*node_energy)(nano::vector, nano::sarray<nano::vector>,
-        nano::sarray<double>), double(*bond_energy)(nano::vector, nano::vector, nano::sarray<double>));
+        nano::sarray<double>), double(*bond_energy)(nano::vector, nano::vector, nano::sarray<double>),
+        int argc, char* argv[]);
     void store(std::string fname);
 
     double total_energy(nano::vector range_l, nano::vector range_r);  // 系统整体的能量
@@ -101,7 +114,10 @@ protected:
     double (*bond_energy)(nano::vector a, nano::vector b, nano::sarray<double> paras);
     
     // 更新速度，主要方便初始化
-    void update_velocity();
+    void update_velocity(int i);
+
+    // 随机函数池
+    nano::rand_pool prand_pool;
 
 private:
     // 运行参数
@@ -118,11 +134,11 @@ private:
     double tempr;     // 系统的温度
     
     // 局部能量，第一个键能平分，算局部和总体能量，第二个键能不平分
-    double local_energy(nano::vector center, nano::sarray<int> others);
-    double local_energy_for_update(nano::vector center, nano::sarray<int> others);
+    double local_energy(nano::vector center, nano::sarray<nano::vector> others);
+    double local_energy_for_update(nano::vector center, nano::sarray<nano::vector> others);
 
     // 梯度
-    inline nano::vector div(nano::vector center, nano::sarray<int> others) {
+    inline nano::vector div(nano::vector center, nano::sarray<nano::vector> others) {
         nano::vector temp[3] = {center, center, center};
         temp[0][0] += precision;
         temp[1][1] += precision;

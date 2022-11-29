@@ -176,6 +176,18 @@ molecule this_model("restart.bin", my_node_energy, my_bond_energy);
 
 1. `nmath.h/nmath.cpp` 定义了数学相关类，如三维矢量、数组、随机函数以及一些常数；
 2. `molecule.h/molecule.cpp` 定义了 molecule 类，这是一个可以根据自定义能量函数、拓扑结构，进而通过朗之万动力学进行演化的类；
-3. `energy.cpp` 定义了两个能量函数；
+3. `energy.cpp/energy.h` 定义了两个能量函数以及平均曲率与高斯曲率输出；
 4. `model.h/model.cpp` 定义了 model 类，这是 molecule 类的子类，初始化时进行建模，继承了 molecule 的函数；
 5. `main.cpp` 主函数，调用其他类进行演化，根据需要选择运行步骤次数以及动态更改参数。
+
+## 运行提示
+
+### KOKKOS 并行
+
+cmake 使用 `-DUSE_KOKKOS=ON` 可以设置 KOKKOS 并行（暂时仅支持 CPU 层面的并行，异构并行暂不支持）。注意将在 CMakeLisets.txt 中将 Kokkos_DIR 设置成你自己的 KOKKOS 安装目录。
+
+[KOKKOS](https://github.com/kokkos/kokkos) 下载后直接使用 cmake 后 install 即可，注意将 KOKKOS_DEVICES 设置成 OpenMP,Serials，不要使用默认的 CUDA。
+
+### Windows 下运行
+
+cmake 是跨平台的，Windows 下将 CMakeLisets.txt 设置成启动选项即可运行，注意可能存在文件为 unix 格式的情况，可以使用 unix2dos 工具转换。

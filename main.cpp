@@ -23,14 +23,14 @@ int main(int argc, char* argv[]) {
 
 // 如果声明了重启，调用直接 molecule 初始化，否则调用 model 初始化
 #ifdef RESTART
-    molecule this_model("restart.bin", energy_func::node_energy_func, energy_func::bond_energy_func);
+    molecule this_model("restart.bin", energy_func::node_energy_func, energy_func::bond_energy_func, argc, argv);
 #else
     // 默认模型参数 default_para
     para ppara = default_para;
     // 修改模型参数，比如 m,n
     ppara.glide = 3;
     // 以 ppara 参数生成模型
-    model this_model(ppara);
+    model this_model(ppara, argc, argv);
 #endif
 
     // 更改运行时参数

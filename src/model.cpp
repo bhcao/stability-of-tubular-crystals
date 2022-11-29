@@ -6,8 +6,8 @@
 #include "energy.h"
 
 // 原子数和键数保证增原子攀移时不会越界，同时防止减原子攀移初始时越界
-model::model(para p): molecule(p.step, p.mass, p.damp, p.tempr, 
-        p.m * p.n * p.repeat + ((p.climb < 0) ? 0 : p.climb), 3) {
+model::model(para p, int argc, char* argv[]): molecule(p.step, p.mass, p.damp, p.tempr, 
+        p.m * p.n * p.repeat + ((p.climb < 0) ? 0 : p.climb), 3, argc, argv) {
 
     // 能量参数传递给 molecule，参数储存
     set_paras(p.rest_len, 0); set_paras(p.k, 1); set_paras(p.tau, 2);
@@ -45,10 +45,11 @@ model::model(para p): molecule(p.step, p.mass, p.damp, p.tempr,
 #if DYNAMICS == 1 // 非过阻尼时随机初始速度（平均速度与温度有关）
     double v = std::sqrt(3*K_B*this->ppara.tempr*this->ppara.mass);
     for (int i=0; i<this->nodes.size(); i++)
-        this->velocities.push_back(v*nano::rand_vector());
+        this->velocities.push_back(v*this->prand_pool.gen_vector());
 #else
     this->velocities.set_size(this->nodes.size());
-    update_velocity(); // 主要是方便初始化输出
+    for (int i=0; i<this->nodes.size(); i++)
+        update_velocity(i);  // 主要是方便初始化输出
 #endif
 }
 

@@ -38,7 +38,7 @@ typedef struct {
 class model: public molecule {
 public:
     // 初始化生成 nodes、bonds、adjacents
-    model(para ppara);
+    model(para ppara, int argc, char* argv[]);
     
     // 位错对间距
     inline nano::pair<double> dis_pair_distance() {

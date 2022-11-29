@@ -11,6 +11,9 @@
 #define NANO_NMATH_H_
 
 #include <cmath>
+#include <mutex>
+
+#include "narray.h"
 
 namespace nano {
 
@@ -108,8 +111,28 @@ template <typename T> inline pair<T> operator+(pair<T> b1, pair<T> b2) {
 #define PI 3.141592653589793
 #define K_B 1.380649e-23
 
+// 随机数种子
+struct rand_seed {
+    std::mutex lock;  // 互斥锁
+    uint64_t seed;    // 线性同余法随机种子
+    double V1, V2, S; // 高斯随机数种子
+    bool phase;       // 高斯随机数相
+};
+
+#ifndef RAND_POOL_SIZE
+#define RAND_POOL_SIZE 32
+#endif
+
 // 高斯分布的随机位置
-vector rand_vector();
+class rand_pool {
+public:
+    rand_pool();
+    nano::vector gen_vector();
+private:
+    double rand(int i);            // 使用第 i 个随机数种子生成线性随机数（0-1）
+    double gauss_rand(int i);      // 使用第 i 个随机数种子生成高斯随机数
+    nano::darray<rand_seed> pool;  // 随机池，大小以后设成动态
+};
 
 }
 

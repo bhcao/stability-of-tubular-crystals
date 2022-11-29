@@ -40,7 +40,7 @@ double gauss_curvature(nano::vector center, nano::sarray<nano::vector> others,
     double K = 2*PI;
     for (int i=0; i<angle.size(); i++)
         K -= angle[i];
-    return K*3/size;
+    return K/size;
 }
 
 double mean_curvature(nano::vector center, nano::sarray<nano::vector> others, 
@@ -51,7 +51,7 @@ double mean_curvature(nano::vector center, nano::sarray<nano::vector> others,
         H_vec += (1/std::tan(angle[i-1]) + 1/std::tan(angle[i])) * (center-others[i]);
     H_vec += (1/std::tan(angle[angle.size()-1]) + 1/std::tan(angle[0])) * (center-others[0]);
 
-    return 3*nano::mod(H_vec)/4/size;
+    return nano::mod(H_vec)/4/size;
 }
 
 double node_energy_func(nano::vector center, nano::sarray<nano::vector> others, nano::sarray<double> paras) {
