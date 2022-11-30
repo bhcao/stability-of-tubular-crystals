@@ -1,3 +1,11 @@
+/*********************************************************************//**
+ * AVAILABLE https://gitee.com/Bovera/nanotube, COPYRIGHT Bovera (2022)
+ * 
+ * @file src/nmath.cpp
+ * @brief 并行随机函数的实现
+ * @version 0.2.0
+ **************************************************************************/
+
 #include <ctime>
 #include <cmath>
 

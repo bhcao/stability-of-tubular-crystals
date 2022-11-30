@@ -1,3 +1,11 @@
+/*********************************************************************//**
+ * AVAILABLE https://gitee.com/Bovera/nanotube, COPYRIGHT Bovera (2022)
+ * 
+ * @file src/molecule.cpp
+ * @brief 运行类的实现
+ * @version 0.2.0
+ **************************************************************************/
+
 #include <fstream>
 #include <iostream>
 #include <cmath>

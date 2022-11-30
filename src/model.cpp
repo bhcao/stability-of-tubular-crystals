@@ -1,3 +1,11 @@
+/*********************************************************************//**
+ * AVAILABLE https://gitee.com/Bovera/nanotube, COPYRIGHT Bovera (2022)
+ * 
+ * @file src/model.cpp
+ * @brief 建模类的实现
+ * @version 0.2.0
+ **************************************************************************/
+
 #include <cmath>
 
 #include "model.h"

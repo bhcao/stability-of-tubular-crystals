@@ -1,3 +1,11 @@
+/*********************************************************************//**
+ * AVAILABLE https://gitee.com/Bovera/nanotube, COPYRIGHT Bovera (2022)
+ * 
+ * @file src/energy.cpp
+ * @brief 能量函数的实现
+ * @version 0.2.0
+ **************************************************************************/
+
 #include <cmath>
 
 #include "energy.h"
