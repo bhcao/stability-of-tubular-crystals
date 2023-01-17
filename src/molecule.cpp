@@ -47,6 +47,18 @@ double molecule::total_energy(nano::vector range_l, nano::vector range_r) {
     return count;
 }
 
+// 粒子数
+int molecule::total_particle(nano::vector range_l, nano::vector range_r) {
+    int count = 0;
+    for (int i=0; i<this->nodes.size(); i++) {
+        if (this->nodes[i][0] > range_l[0] && this->nodes[i][0] < range_r[0] &&
+            this->nodes[i][1] > range_l[1] && this->nodes[i][1] < range_r[1] &&
+            this->nodes[i][2] > range_l[2] && this->nodes[i][2] < range_r[2])
+            count++;
+    }
+    return count;
+}
+
 double molecule::local_energy_for_update(nano::vector center, nano::sarray<nano::vector> others) {
     double count = 0;
     for (int i=0; i<others.size(); i++) {
@@ -69,8 +81,8 @@ void molecule::update_velocity(int i) {
         this->prand_pool.gen_vector();
     this->velocities[i] += accelerate * this->step;
     #elif DYNAMICS == 2  // 过阻尼朗之万
-    this->velocities[i] = -div(this->nodes[i], adjacent)/this->damp + std::sqrt(2*this->damp*
-        this->tempr*K_B/this->mass)*this->prand_pool.gen_vector()/this->damp;
+    this->velocities[i] = -div(this->nodes[i], adjacent)/this->damp;// + std::sqrt(2*this->damp*
+        // this->tempr*K_B/this->mass)*this->prand_pool.gen_vector()/this->damp;
     #endif
 }
 
@@ -81,7 +93,77 @@ void molecule::update() {
     for (int i=0; i<this->nodes.size(); i++) {
 #endif
         update_velocity(i);
-        this->nodes[i] += this->velocities[i] * this->step;
+        if (this->adjacents[i].size() == 4) {
+            nano::vector velocity;
+            for (int j=0; j<4; j++) {
+                if (this->adjacents[this->adjacents[i][j]].size() != 4)
+                    velocity += this->velocities[this->adjacents[i][j]];
+            }
+            this->nodes[i] += velocity/2 * this->step;
+        } else
+            this->nodes[i] += this->velocities[i] * this->step;
+    }
+#ifdef USE_KOKKOS
+    );
+#endif
+    this->time++;
+}
+
+void molecule::border_update(nano::darray<nano::sarray<int>> *rigid) {
+    // 质心、惯性张量（主轴近似）、合力、合力矩、角加速度
+    nano::vector up_center, up_tensor, up_force, up_moment;
+    for (int i=0; i<(*rigid).size(); i++) {
+        up_center += this->nodes[(*rigid)[i][2]];
+    }
+    up_center = up_center / (*rigid).size();
+    for (int i=0; i<(*rigid).size(); i++) {
+        double rest_len = this->paras[0], k = this->paras[1];
+        nano::vector x1 = this->nodes[(*rigid)[i][2]] - this->nodes[(*rigid)[i][1]];
+        nano::vector x2 = this->nodes[(*rigid)[i][2]] - this->nodes[(*rigid)[i][0]];
+        nano::vector force = k * (rest_len/nano::mod(x1) - 1) * x1 +
+            k * (rest_len/nano::mod(x2) - 1) * x2;
+        up_force += force;
+        up_moment += nano::cross(this->nodes[(*rigid)[i][2]]-up_center, force);
+        nano::vector t = this->nodes[(*rigid)[i][2]]-up_center;
+        up_tensor += nano::vector(t[1]*t[1]+t[2]*t[2], t[0]*t[0]+t[2]*t[2], t[0]*t[0]+t[1]*t[1]);
+    }
+    up_tensor = (*rigid).size() * nano::vector(up_moment[0]/up_tensor[0], 
+        up_moment[1]/up_tensor[1], up_moment[2]/up_tensor[2]);
+    for (int i=0; i<(*rigid).size(); i++) {
+        nano::vector t = this->nodes[(*rigid)[i][2]]-up_center;
+        this->nodes[(*rigid)[i][2]] += (up_force + nano::cross(up_tensor, t)) *
+            this->step / this->damp;
+    }
+}
+
+// 边缘刚体模型更新
+void molecule::update_rigid() {
+    // 确定粒子序号
+    nano::darray<nano::sarray<int>> up_rigid(50), down_rigid(50);
+    for (int i=0; i<this->nodes.size(); i++)
+    if (this->adjacents[i].size() == 4) {
+        nano::sarray<int> adj;
+        for (int j=0; j<4; j++) {
+            if (this->adjacents[this->adjacents[i][j]].size() != 4)
+                adj.push_back(this->adjacents[i][j]);
+        }
+        adj.push_back(i);
+        if (this->nodes[i][2]<20)
+            up_rigid.push_back(adj);
+        else
+            down_rigid.push_back(adj);
+    }
+    border_update(&up_rigid);
+    border_update(&down_rigid);
+
+#ifdef USE_KOKKOS
+    Kokkos::parallel_for(this->nodes.size(), KOKKOS_LAMBDA(int i) {
+#else
+    for (int i=0; i<this->nodes.size(); i++) {
+#endif
+        update_velocity(i);
+        if (this->adjacents[i].size() != 4)
+            this->nodes[i] += this->velocities[i] * this->step;
     }
 #ifdef USE_KOKKOS
     );

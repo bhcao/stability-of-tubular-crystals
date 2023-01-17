@@ -77,6 +77,8 @@ public:
 
     //! 输出到以 fname 为名的文件，注意 .dump 会追加而不是覆盖，尽量删除再运行（默认 dump 什么也不输出）
     void dump(std::string fname, nano::dump_t dump_type = 0);
+    void update_rigid(); //!< 边缘刚体模型更新
+    int total_particle(nano::vector range_l, nano::vector range_r); //!< 该范围内的总粒子数
 
     //! 设置参数，如果小于零只输出当前参数，funcname 函数名，paraname 参数名，包装的目的是防止乱动
     #define SET_PARA_FUNC(name) \
@@ -139,6 +141,7 @@ private:
     double local_energy(nano::vector center, nano::sarray<nano::vector> others);
     //! 局部能量，更新求导时使用，键能不平分，这样求导才正确
     double local_energy_for_update(nano::vector center, nano::sarray<nano::vector> others);
+    void border_update(nano::darray<nano::sarray<int>> *);  //! 边界更新
 
     //! 梯度
     inline nano::vector div(nano::vector center, nano::sarray<nano::vector> others) {
