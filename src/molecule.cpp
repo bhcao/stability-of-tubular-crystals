@@ -162,7 +162,7 @@ void molecule::update_rigid() {
     for (int i=0; i<this->nodes.size(); i++) {
 #endif
         update_velocity(i);
-        if (this->adjacents[i].size() != 4)
+        if (this->adjacents[i].size() != 6 && this->emphasis.find(i) == -1)
             this->nodes[i] += this->velocities[i] * this->step;
     }
 #ifdef USE_KOKKOS
