@@ -93,7 +93,7 @@ void molecule::update() {
     for (int i=0; i<this->nodes.size(); i++) {
 #endif
         update_velocity(i);
-        if (this->adjacents[i].size() == 4) {
+        if (this->adjacents[i].size() != 6 && this->emphasis.find(i) == -1) {
             nano::vector velocity;
             for (int j=0; j<4; j++) {
                 if (this->adjacents[this->adjacents[i][j]].size() != 4)
@@ -141,10 +141,10 @@ void molecule::update_rigid() {
     // 确定粒子序号
     nano::darray<nano::sarray<int>> up_rigid(50), down_rigid(50);
     for (int i=0; i<this->nodes.size(); i++)
-    if (this->adjacents[i].size() == 4) {
+    if (this->adjacents[i].size() != 6 && this->emphasis.find(i) == -1) {
         nano::sarray<int> adj;
         for (int j=0; j<4; j++) {
-            if (this->adjacents[this->adjacents[i][j]].size() != 4)
+            if (this->adjacents[this->adjacents[i][j]].size() == 6)
                 adj.push_back(this->adjacents[i][j]);
         }
         adj.push_back(i);
