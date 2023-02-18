@@ -29,8 +29,7 @@ double size_around(nano::vector center, nano::sarray<nano::vector> others) {
     return size/3;
 }
 
-// 一个点周围所有角
-nano::sarray<double> angles_around(nano::vector center, nano::sarray<nano::vector> others) {
+double gauss_curvature(nano::vector center, nano::sarray<nano::vector> others, double size) {
     nano::sarray<double> angle;
     for (int i=0; i<others.size()-1; i++)
         // 计算任意三点之间的所成角
@@ -39,11 +38,6 @@ nano::sarray<double> angles_around(nano::vector center, nano::sarray<nano::vecto
     angle.push_back(std::acos(((others[others.size()-1]-center)*(others[0]-center))/
         nano::mod(center - others[0])/nano::mod(center - others[others.size()-1])));
 
-    return angle;
-}
-
-double gauss_curvature(nano::vector center, nano::sarray<nano::vector> others, 
-        nano::sarray<double> angle, double size) {    
     // 计算高斯曲率
     double K = 2*PI;
     for (int i=0; i<angle.size(); i++)
@@ -51,8 +45,7 @@ double gauss_curvature(nano::vector center, nano::sarray<nano::vector> others,
     return K/size;
 }
 
-double mean_curvature(nano::vector center, nano::sarray<nano::vector> others, 
-        nano::sarray<double> angle, double size) {
+double mean_curvature(nano::vector center, nano::sarray<nano::vector> others, double size) {
 
     nano::sarray<double> angle1;
     for (int i=0; i<others.size()-1; i++)
@@ -80,10 +73,9 @@ double mean_curvature(nano::vector center, nano::sarray<nano::vector> others,
 
 double node_energy_func(nano::vector center, nano::sarray<nano::vector> others, nano::sarray<double> paras) {
     double tau = paras[2];
-    nano::sarray<double> angle = angles_around(center, others);
     double size = size_around(center, others);
-    double K = gauss_curvature(center, others, angle, size);    
-    double H = mean_curvature(center, others, angle, size);
+    double K = gauss_curvature(center, others, size);    
+    double H = mean_curvature(center, others, size);
     return tau * (2*H*H - K);
 }
 

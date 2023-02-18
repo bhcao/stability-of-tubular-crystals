@@ -59,56 +59,43 @@ int molecule::total_particle(nano::vector range_l, nano::vector range_r) {
     return count;
 }
 
-double molecule::local_energy_for_update(nano::vector center, nano::sarray<nano::vector> others) {
-    double count = 0;
-    for (int i=0; i<others.size(); i++) {
-        count += this->bond_energy(center, others[i], this->paras);
+double molecule::local_energy_for_update(int i, nano::vector center) {
+    // 中心曲率能量
+    nano::sarray<nano::vector> adjacent;
+    for (int j=0; j<this->adjacents[i].size(); j++) 
+        adjacent.push_back(this->nodes[this->adjacents[i][j]]);
+    double count = this->node_energy(center, adjacent, this->paras);
+
+    for (int j=0; j<this->adjacents[i].size(); j++) {
+        int num = this->adjacents[i][j];
+        // 键能
+        count += this->bond_energy(center, adjacent[j], this->paras);
+        // 周围曲率能量
+        nano::sarray<nano::vector> adjacent2;
+        for (int k=0; k<this->adjacents[num].size(); k++) {
+            if (this->adjacents[num][k] == i)
+                adjacent2.push_back(center);
+            else
+                adjacent2.push_back(this->nodes[this->adjacents[num][k]]);
+        }
+        count += this->node_energy(this->nodes[num], adjacent2, this->paras);
     }
-    count += this->node_energy(center, others, this->paras);
     return count;
 }
 
 void molecule::update_velocity(int i) {
-    nano::sarray<nano::vector> adjacent;
-    for (int j=0; j<this->adjacents[i].size(); j++) 
-        adjacent.push_back(this->nodes[this->adjacents[i][j]]);
 
     #if DYNAMICS == 0 // 梯度下降
-    this->velocities[i] = -div(this->nodes[i], adjacent);
+    this->velocities[i] = -div(i);
     #elif DYNAMICS == 1  // 求加速度（朗之万），朗之万方程三项
-    nano::vector accelerate = -div(this->nodes[i], adjacent)/this->mass - this->damp*
+    nano::vector accelerate = -div(i)/this->mass - this->damp*
         this->velocities[i] + std::sqrt(2*this->damp*this->tempr*K_B/this->mass)*
         this->prand_pool.gen_vector();
     this->velocities[i] += accelerate * this->step;
     #elif DYNAMICS == 2  // 过阻尼朗之万
-    this->velocities[i] = -div(this->nodes[i], adjacent)/this->damp;// + std::sqrt(2*this->damp*
+    this->velocities[i] = -div(i)/this->damp;// + std::sqrt(2*this->damp*
         // this->tempr*K_B/this->mass)*this->prand_pool.gen_vector()/this->damp;
     #endif
-}
-
-void molecule::update() {
-#ifdef USE_KOKKOS
-    Kokkos::parallel_for(this->nodes.size(), KOKKOS_LAMBDA(int i) {
-#else
-    for (int i=0; i<this->nodes.size(); i++) {
-#endif
-        update_velocity(i);
-        if (this->adjacents[i].size() != 6 && this->emphasis.find(i) == -1) {
-            nano::vector velocity;
-            int times = 0;
-            for (int j=0; j<this->adjacents[i].size(); j++)
-            if (this->adjacents[this->adjacents[i][j]].size() == 6) {
-                velocity += this->velocities[this->adjacents[i][j]];
-                times++;
-            }
-            this->nodes[i] += velocity/times * this->step;
-        } else
-            this->nodes[i] += this->velocities[i] * this->step;
-    }
-#ifdef USE_KOKKOS
-    );
-#endif
-    this->time++;
 }
 
 void molecule::border_update(nano::darray<nano::sarray<int>> *rigid) {
@@ -140,7 +127,7 @@ void molecule::border_update(nano::darray<nano::sarray<int>> *rigid) {
 }
 
 // 边缘刚体模型更新
-void molecule::update_rigid() {
+void molecule::update() {
     // 确定粒子序号
     nano::darray<nano::sarray<int>> up_rigid(50), down_rigid(50);
     for (int i=0; i<this->nodes.size(); i++)
@@ -165,6 +152,16 @@ void molecule::update_rigid() {
     for (int i=0; i<this->nodes.size(); i++) {
 #endif
         update_velocity(i);
+    }
+#ifdef USE_KOKKOS
+    );
+#endif
+
+#ifdef USE_KOKKOS
+    Kokkos::parallel_for(this->nodes.size(), KOKKOS_LAMBDA(int i) {
+#else
+    for (int i=0; i<this->nodes.size(); i++) {
+#endif
         if (this->adjacents[i].size() == 6 || this->emphasis.find(i) != -1)
             this->nodes[i] += this->velocities[i] * this->step;
     }
@@ -245,7 +242,6 @@ if (FILE *file = std::fopen((fname + ".data").c_str(), "r")) {
         for (int j=0; j<this->adjacents[i].size(); j++)
             adjacent.push_back(this->nodes[this->adjacents[i][j]]);
         double size = energy_func::size_around(this->nodes[i], adjacent);
-        nano::sarray<double> angle = energy_func::angles_around(this->nodes[i], adjacent);
 
         fout << i << "\t " << types[i] << "\t" // 基础 id type xs ys zs
             << this->nodes[i][0] << '\t' << this->nodes[i][1] << '\t' << this->nodes[i][2];
@@ -253,11 +249,11 @@ if (FILE *file = std::fopen((fname + ".data").c_str(), "r")) {
             fout << "\t" << this->velocities[i][0] << "\t" << this->velocities[i][1]
                 << "\t" << this->velocities[i][2];
         if (DUMP_CHECK(nano::DIV_FORCE, dump_type)) {
-            nano::vector temp = div(this->nodes[i], adjacent);
+            nano::vector temp = div(i);
             fout << "\t" << temp[0] << "\t" << temp[1] << "\t" << temp[2];
         }
         if (DUMP_CHECK(nano::LAN_FORCE, dump_type)) {
-            nano::vector accelerate = -div(this->nodes[i], adjacent)/this->mass - 
+            nano::vector accelerate = -div(i)/this->mass - 
                 this->damp*this->velocities[i] + std::sqrt(2*this->damp*this->tempr*
                 K_B/this->mass)*this->prand_pool.gen_vector();
             nano::vector temp = this->mass * accelerate;
@@ -268,9 +264,9 @@ if (FILE *file = std::fopen((fname + ".data").c_str(), "r")) {
         if (DUMP_CHECK(nano::P_ENERGY, dump_type))
             fout << "\t" << local_energy(this->nodes[i], adjacent);
         if (DUMP_CHECK(nano::GAUSS_CURVE, dump_type))
-            fout << "\t" << energy_func::gauss_curvature(this->nodes[i], adjacent, angle, size);
+            fout << "\t" << energy_func::gauss_curvature(this->nodes[i], adjacent, size);
         if (DUMP_CHECK(nano::MEAN_CURVE, dump_type))
-            fout << "\t" << energy_func::mean_curvature(this->nodes[i], adjacent, angle, size);
+            fout << "\t" << energy_func::mean_curvature(this->nodes[i], adjacent, size);
         fout << '\n';
     }
     fout.close();
