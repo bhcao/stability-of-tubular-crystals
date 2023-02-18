@@ -70,6 +70,8 @@ double molecule::local_energy_for_update(int i, nano::vector center) {
         int num = this->adjacents[i][j];
         // 键能
         count += this->bond_energy(center, adjacent[j], this->paras);
+        if (this->adjacents[num].size() != 6 && this->emphasis.find(num) == -1)
+            continue;
         // 周围曲率能量
         nano::sarray<nano::vector> adjacent2;
         for (int k=0; k<this->adjacents[num].size(); k++) {
