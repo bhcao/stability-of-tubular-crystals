@@ -34,7 +34,7 @@ int main(int argc, char* argv[]) {
 
 std::ofstream fout("data.txt");
 double tau[4] = {0.01, 0.1, 0.05, 0.5};
-for (int g=7; g<8; g++)
+for (int g=0; g<5; g++)
 for (int t=0; t<4; t++) {
 // 如果声明了重启，调用直接 molecule 初始化，否则调用 model 初始化
 #ifdef RESTART
@@ -72,24 +72,15 @@ OUT_DUMP
     }*/
 for (int i=0; i<3; i++) {
     // 粒子同步移动的更新
-    for (int k=5000; k>0; k--) {
+    for (int k=100000; k>0; k--) {
         if (k%1000==0) {
             OUT_DUMP
+            fout << this_model.total_particle(OUT_RANGE) << ": " << this_model.total_energy(OUT_RANGE) << std::endl;
         }
         // this_model.set_tempr((k+5000)*1e19);
         // 模型计算更新
         this_model.update();
     }
-
-    // 边缘刚体模型的更新
-    for (int k=95000; k>0; k--) {
-        if (k%1000==0) {
-            OUT_DUMP
-        }
-        this_model.update_rigid();
-    }
-
-    fout << this_model.total_particle(OUT_RANGE) << ": " << this_model.total_energy(OUT_RANGE) << std::endl;
 
     // 储存文件以便继续运行
     this_model.store(std::to_string(t)+"_"+std::to_string(g)+"_"+std::to_string(i)+".bin");
