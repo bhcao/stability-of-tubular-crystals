@@ -95,11 +95,13 @@ void molecule::update() {
         update_velocity(i);
         if (this->adjacents[i].size() != 6 && this->emphasis.find(i) == -1) {
             nano::vector velocity;
-            for (int j=0; j<4; j++) {
-                if (this->adjacents[this->adjacents[i][j]].size() != 4)
-                    velocity += this->velocities[this->adjacents[i][j]];
+            int times = 0;
+            for (int j=0; j<this->adjacents[i].size(); j++)
+            if (this->adjacents[this->adjacents[i][j]].size() == 6) {
+                velocity += this->velocities[this->adjacents[i][j]];
+                times++;
             }
-            this->nodes[i] += velocity/2 * this->step;
+            this->nodes[i] += velocity/times * this->step;
         } else
             this->nodes[i] += this->velocities[i] * this->step;
     }
@@ -113,25 +115,26 @@ void molecule::border_update(nano::darray<nano::sarray<int>> *rigid) {
     // 质心、惯性张量（主轴近似）、合力、合力矩、角加速度
     nano::vector up_center, up_tensor, up_force, up_moment;
     for (int i=0; i<(*rigid).size(); i++) {
-        up_center += this->nodes[(*rigid)[i][2]];
+        up_center += this->nodes[(*rigid)[i][0]];
     }
     up_center = up_center / (*rigid).size();
     for (int i=0; i<(*rigid).size(); i++) {
         double rest_len = this->paras[0], k = this->paras[1];
-        nano::vector x1 = this->nodes[(*rigid)[i][2]] - this->nodes[(*rigid)[i][1]];
-        nano::vector x2 = this->nodes[(*rigid)[i][2]] - this->nodes[(*rigid)[i][0]];
-        nano::vector force = k * (rest_len/nano::mod(x1) - 1) * x1 +
-            k * (rest_len/nano::mod(x2) - 1) * x2;
+        nano::vector force;
+        for (int l=1; l<(*rigid)[i].size(); l++) {
+            nano::vector x = this->nodes[(*rigid)[i][0]] - this->nodes[(*rigid)[i][l]];
+            force += k * (rest_len/nano::mod(x) - 1) * x;
+        }
         up_force += force;
-        up_moment += nano::cross(this->nodes[(*rigid)[i][2]]-up_center, force);
-        nano::vector t = this->nodes[(*rigid)[i][2]]-up_center;
+        nano::vector t = this->nodes[(*rigid)[i][0]]-up_center;
+        up_moment += nano::cross(t, force);
         up_tensor += nano::vector(t[1]*t[1]+t[2]*t[2], t[0]*t[0]+t[2]*t[2], t[0]*t[0]+t[1]*t[1]);
     }
     up_tensor = (*rigid).size() * nano::vector(up_moment[0]/up_tensor[0], 
         up_moment[1]/up_tensor[1], up_moment[2]/up_tensor[2]);
     for (int i=0; i<(*rigid).size(); i++) {
-        nano::vector t = this->nodes[(*rigid)[i][2]]-up_center;
-        this->nodes[(*rigid)[i][2]] += (up_force + nano::cross(up_tensor, t)) *
+        nano::vector t = this->nodes[(*rigid)[i][0]]-up_center;
+        this->nodes[(*rigid)[i][0]] += ( up_force + nano::cross(up_tensor, t)) *
             this->step / this->damp;
     }
 }
@@ -143,11 +146,11 @@ void molecule::update_rigid() {
     for (int i=0; i<this->nodes.size(); i++)
     if (this->adjacents[i].size() != 6 && this->emphasis.find(i) == -1) {
         nano::sarray<int> adj;
-        for (int j=0; j<4; j++) {
+        adj.push_back(i);
+        for (int j=0; j<this->adjacents[i].size(); j++) {
             if (this->adjacents[this->adjacents[i][j]].size() == 6)
                 adj.push_back(this->adjacents[i][j]);
         }
-        adj.push_back(i);
         if (this->nodes[i][2]<20)
             up_rigid.push_back(adj);
         else
@@ -162,7 +165,7 @@ void molecule::update_rigid() {
     for (int i=0; i<this->nodes.size(); i++) {
 #endif
         update_velocity(i);
-        if (this->adjacents[i].size() != 6 && this->emphasis.find(i) == -1)
+        if (this->adjacents[i].size() == 6 || this->emphasis.find(i) != -1)
             this->nodes[i] += this->velocities[i] * this->step;
     }
 #ifdef USE_KOKKOS

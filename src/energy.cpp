@@ -52,12 +52,28 @@ double gauss_curvature(nano::vector center, nano::sarray<nano::vector> others,
 }
 
 double mean_curvature(nano::vector center, nano::sarray<nano::vector> others, 
-        nano::sarray<double> angle, double size) {    
+        nano::sarray<double> angle, double size) {
+
+    nano::sarray<double> angle1;
+    for (int i=0; i<others.size()-1; i++)
+        // 计算任意三点之间的所成角
+        angle1.push_back(std::acos(((center-others[i+1])*(others[i]-others[i+1]))/
+            nano::mod(center - others[i+1])/nano::mod(others[i] - others[i+1])));
+    angle1.push_back(std::acos(((center-others[0])*(others[others.size()-1]-others[0]))/
+        nano::mod(center - others[0])/nano::mod(others[others.size()-1] - others[0])));
+    
+    nano::sarray<double> angle2;
+    angle2.push_back(std::acos(((center-others[others.size()-1])*(others[0]-others[others.size()-1]))/
+        nano::mod(center - others[others.size()-1])/nano::mod(others[0] - others[others.size()-1])));
+    for (int i=0; i<others.size()-1; i++)
+        // 计算任意三点之间的所成角
+        angle2.push_back(std::acos(((center-others[i])*(others[i+1]-others[i]))/
+            nano::mod(center - others[i])/nano::mod(others[i+1] - others[i])));
+
     // 计算平均曲率中的向量
     nano::vector H_vec;
-    for (int i=1; i<others.size(); i++)
-        H_vec += (1/std::tan(angle[i-1]) + 1/std::tan(angle[i])) * (center-others[i]);
-    H_vec += (1/std::tan(angle[angle.size()-1]) + 1/std::tan(angle[0])) * (center-others[0]);
+    for (int i=0; i<others.size(); i++)
+        H_vec += (1/std::tan(angle1[i]) + 1/std::tan(angle2[i])) * (center-others[i]);
 
     return nano::mod(H_vec)/4/size;
 }
