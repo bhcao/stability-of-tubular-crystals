@@ -20,15 +20,11 @@ namespace energy_func {
 
 //! 周围区域总面积除 3
 double size_around(nano::vector center, nano::sarray<nano::vector> others);
-//! center 周围所有角值的列表
-nano::sarray<double> angles_around(nano::vector center, nano::sarray<nano::vector> others);
 
 //! 高斯曲率
-double gauss_curvature(nano::vector center, nano::sarray<nano::vector> others, 
-        nano::sarray<double> angle, double size);
+double gauss_curvature(nano::vector center, nano::sarray<nano::vector> others, double size);
 //! 平均曲率
-double mean_curvature(nano::vector center, nano::sarray<nano::vector> others, 
-        nano::sarray<double> angle, double size);
+double mean_curvature(nano::vector center, nano::sarray<nano::vector> others, double size);
 
 //! 曲率能量函数，paras 顺序为 rest_len, k, tau
 double node_energy_func(nano::vector center, nano::sarray<nano::vector> others, nano::sarray<double> paras);
