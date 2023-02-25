@@ -82,6 +82,13 @@ double molecule::local_energy_for_update(int i, nano::vector center) {
         }
         count += this->node_energy(this->nodes[num], adjacent2, this->paras);
     }
+    
+    for (int j=0; j<this->adjacents2[i].size(); j++) {
+        nano::sarray<double> para = this->paras;
+        para[0] = std::sqrt(2) * para[0];
+        count += this->bond_energy(this->nodes[this->adjacents2[i][j]], this->nodes[i], para);
+    }
+
     return count;
 }
 
@@ -133,7 +140,7 @@ void molecule::update() {
     // 确定粒子序号
     nano::darray<nano::sarray<int>> up_rigid(50), down_rigid(50);
     for (int i=0; i<this->nodes.size(); i++)
-    if (this->adjacents[i].size() != 6 && this->emphasis.find(i) == -1) {
+    if (this->adjacents[i].size() != 4) {
         nano::sarray<int> adj;
         adj.push_back(i);
         for (int j=0; j<this->adjacents[i].size(); j++) {
@@ -164,7 +171,7 @@ void molecule::update() {
 #else
     for (int i=0; i<this->nodes.size(); i++) {
 #endif
-        if (this->adjacents[i].size() == 6 || this->emphasis.find(i) != -1)
+        if (this->adjacents[i].size() == 4)
             this->nodes[i] += this->velocities[i] * this->step;
     }
 #ifdef USE_KOKKOS
@@ -197,7 +204,7 @@ if (FILE *file = std::fopen((fname + ".data").c_str(), "r")) {
         << this->nodes.size() << "\tatoms\n" // 原子、键数
         << this->bonds.size() << "\tbonds\n\n"
         << (DUMP_CHECK(nano::EMPHASIS, dump_type) ? 2 : 1) // 原子、键类型数
-        << "\tatom types\n1\tbond types\n\n"
+        << "\tatom types\n2\tbond types\n\n"
         << boundary[0] << "\t" << boundary[1] << "\txlo xhi\n" // 边界
         << boundary[2] << "\t" << boundary[3] << "\tylo yhi\n"
         << boundary[4] << "\t" << boundary[5] << "\tzlo zhi\n\n"
@@ -212,7 +219,8 @@ if (FILE *file = std::fopen((fname + ".data").c_str(), "r")) {
 
     fout << "\nBonds\n\n"; // 键
     for (int i=0; i<this->bonds.size(); i++)
-        fout << i << "\t1\t" << this->bonds[i][0] << '\t' << this->bonds[i][1] << '\n';
+        fout << i << "\t" << this->bonds_type[i] << "\t" << this->bonds[i][0] 
+        << '\t' << this->bonds[i][1] << '\n';
 
     fout.close();
 }}
@@ -292,7 +300,9 @@ molecule::molecule(std::string fname, double(*in_node_energy)(nano::vector, nano
     this->nodes.deserialize(fin);
     this->velocities.deserialize(fin);
     this->adjacents.deserialize(fin);
+    this->adjacents2.deserialize(fin);
     this->bonds.deserialize(fin);
+    this->bonds_type.deserialize(fin);
 
     fin.close();
 }
@@ -307,7 +317,9 @@ void molecule::store(std::string fname) {
     this->nodes.serialize(fout);
     this->velocities.serialize(fout);
     this->adjacents.serialize(fout);
+    this->adjacents2.serialize(fout);
     this->bonds.serialize(fout);
+    this->bonds_type.serialize(fout);
 
     fout.close();
 }

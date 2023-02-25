@@ -56,7 +56,7 @@ public:
     inline molecule(double step, double mass, double damp, double tempr, int node_n,
         int bond_div_node_n, int argc, char* argv[]): time(0), step(step), precision(1e-10), mass(mass), 
         damp(damp), tempr(tempr), nodes(node_n), velocities(node_n), adjacents(node_n),
-        bonds(bond_div_node_n * node_n) {
+        bonds(bond_div_node_n * node_n), bonds_type(bond_div_node_n * node_n), adjacents2(node_n) {
     #ifdef USE_KOKKOS
         Kokkos::initialize(argc, argv);
     #endif
@@ -106,9 +106,11 @@ protected:
     nano::darray<nano::vector> nodes;  //!< 坐标
     nano::darray<nano::vector> velocities; //!< 速度
     nano::darray<nano::sarray<int>> adjacents; //!< 相邻粒子（代替键）
+    nano::darray<nano::sarray<int>> adjacents2; //!< 对角线粒子
 
     //! 键，只在 dump 中有用，计算时无用
     nano::darray<nano::pair<int>> bonds;
+    nano::darray<int> bonds_type; //!< 键的类型
     nano::sarray<int> emphasis; //!< 强调的粒子，输出时会用不同 type
 
     //! 函数指针，以粒子为中心的能量，其余顺序已排好

@@ -28,10 +28,11 @@ model::model(para p, int argc, char* argv[]): molecule(p.step, p.mass, p.damp, p
     // 模型构建过程
     perfect_model_position();
     this->adjacents.set_size(this->nodes.size()); // 邻接增加
+    this->adjacents2.set_size(this->nodes.size());
     perfect_model_topology();
     
     // 初始化位错，设置检查点等
-    this->begin[1] = this->end[0] = flat(0, (p.repeat + 1) * p.m / 2) + p.bn;
+    /*this->begin[1] = this->end[0] = flat(0, (p.repeat + 1) * p.m / 2) + p.bn;
     nano::sarray<int>& center = this->adjacents[this->end[0]];
     if (p.direction > 0)
         this->begin[0] = this->end[1] = center[std::abs(p.direction)];
@@ -48,7 +49,7 @@ model::model(para p, int argc, char* argv[]): molecule(p.step, p.mass, p.damp, p
         this->emphasis.push_back(this->begin[1]);
         this->emphasis.push_back(this->end[0]);
         this->emphasis.push_back(this->end[1]);
-    }
+    }*/
 
 #if DYNAMICS == 1 // 非过阻尼时随机初始速度（平均速度与温度有关）
     double v = std::sqrt(3*K_B*this->ppara.tempr*this->ppara.mass);
@@ -68,11 +69,11 @@ void model::perfect_model_position() {
     double m = (double)this->ppara.m, n = (double)this->ppara.n;
     
     // 角度 A、B，分母为零必须单独处理
-    double A = (2*n == m) ? PI / 2 : std::atan(sqrt(3)/2 * m / (n - m/2));
-    double B = (2*m == n) ? PI / 2 : std::atan(sqrt(3)/2 * n / (m - n/2));
+    double A = (n == 0) ? PI : std::atan(m / n);
+    double B = PI/2 - A;
     
     // 半径 r（归一化）
-    double r = 1/PI/2 * std::sqrt(m*m+n*n-m*n);
+    double r = std::sqrt(m*m+n*n)/PI/2;
 
     for (int j = 0; j < this->ppara.repeat*this->ppara.m; j++)
     for (int i = 0; i < this->ppara.n; i++) {
@@ -98,24 +99,37 @@ void model::perfect_model_position() {
 
 void model::perfect_model_topology() {
     // 生成键和邻接结构
-    #define NEAR_THEN_PUSH_ALL(a) \
+    #define NEAR_THEN_PUSH_ALL(a, type) \
         if (std::abs(this->nodes[flat(i, j)][2] - this->nodes[a][2]) < 2*this->ppara.rest_len) { \
             this->bonds.push_back({flat(i, j), a});   \
-            this->adjacents[flat(i, j)].push_back(a); \
+            this->bonds_type.push_back(type); \
+            if (type == 1) \
+                this->adjacents[flat(i, j)].push_back(a); \
+            else \
+                this->adjacents2[flat(i, j)].push_back(a); \
         }
-    #define NEAR_THEN_PUSH(a) \
+    #define NEAR_THEN_PUSH(a, type) \
         if (std::abs(this->nodes[flat(i, j)][2] - this->nodes[a][2]) < 2*this->ppara.rest_len) \
-            this->adjacents[flat(i, j)].push_back(a);
-    
+            if (type == 1) \
+                this->adjacents[flat(i, j)].push_back(a); \
+            else \
+                this->adjacents2[flat(i, j)].push_back(a);
+
     // 键只三个方向生成，因为剩余三个方向已经生成了；邻接六个方向均生成
     for (int i = 0; i < this->ppara.n; i++) 
     for (int j = 0; j < this->ppara.repeat*this->ppara.m; j++) {
-        NEAR_THEN_PUSH_ALL(flat(i+1, j))
-        NEAR_THEN_PUSH_ALL(flat(i, j+1))
-        NEAR_THEN_PUSH_ALL(flat(i-1, j+1))
-        NEAR_THEN_PUSH(flat(i-1, j))
-        NEAR_THEN_PUSH(flat(i, j-1))
-        NEAR_THEN_PUSH(flat(i+1, j-1))
+        NEAR_THEN_PUSH_ALL(flat(i+1, j), 1)
+        if ((i+j)%2 == 0)
+            NEAR_THEN_PUSH_ALL(flat(i+1, j+1), 2)
+        NEAR_THEN_PUSH_ALL(flat(i, j+1), 1)
+        if ((i+j)%2 == 0)
+            NEAR_THEN_PUSH_ALL(flat(i-1, j+1), 2)
+        NEAR_THEN_PUSH(flat(i-1, j), 1)
+        if ((i+j)%2 == 0)
+            NEAR_THEN_PUSH(flat(i-1, j-1), 2)
+        NEAR_THEN_PUSH(flat(i, j-1), 1)
+        if ((i+j)%2 == 0)
+            NEAR_THEN_PUSH(flat(i+1, j-1), 2)
     }
 }
 
